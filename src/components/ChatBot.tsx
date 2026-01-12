@@ -10,9 +10,7 @@ export default function ChatBot() {
     const [isOpen, setIsOpen] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(true);
-    const [messages, setMessages] = useState([
-        { role: 'bot', content: 'Hello! I am your Chu Precision Health Assistant. How can I help you optimize your health today?' }
-    ]);
+    const [messages, setMessages] = useState<Array<{ role: string, content: string }>>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
     const recognitionRef = useRef<any>(null);
     const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -171,9 +169,6 @@ export default function ChatBot() {
                         >
                             <Mic size={32} className="text-white" />
                         </button>
-                        <p className="text-[10pt] font-black uppercase text-gray-400 tracking-widest">
-                            {isListening ? 'Listening...' : 'Hold Mic to Talk • Text or Voice'}
-                        </p>
                     </div>
                 </div>
 
