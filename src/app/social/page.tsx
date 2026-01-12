@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import Navbar from '@/components/Navbar';
 import { Users, Home } from 'lucide-react';
 import Link from 'next/link';
 import { colors, spacing, fontSize } from '@/lib/design-system';
@@ -13,7 +12,6 @@ export default function SocialPage() {
 
     return (
         <ProtectedRoute>
-            <Navbar customTitle="Social" />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xxl, width: '100%', padding: spacing.xs }}>
 

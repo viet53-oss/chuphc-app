@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import Navbar from '@/components/Navbar';
 import { Apple, Home } from 'lucide-react';
 import Link from 'next/link';
 import { colors, spacing, fontSize } from '@/lib/design-system';
+// Navbar removed
 
 export default function NutritionPage() {
     const [dailyCalories, setDailyCalories] = useState(0);
@@ -13,7 +13,6 @@ export default function NutritionPage() {
 
     return (
         <ProtectedRoute>
-            <Navbar customTitle="Nutrition" />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xxl, width: '100%', padding: spacing.xs }}>
 

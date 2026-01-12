@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { AuthProvider } from "@/contexts/AuthContext";
+import GlobalChat from "@/components/GlobalChat";
 
 export const metadata: Metadata = {
   title: "Chu Precision Health | Patient Portal",
@@ -40,8 +41,7 @@ export default function RootLayout({
             <main className="px-1">
               {children}
             </main>
-
-
+            <GlobalChat />
           </div>
         </AuthProvider>
       </body>

@@ -1,12 +1,13 @@
 'use client';
 
 import { User } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Navbar({ customTitle }: { customTitle?: string }) {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const router = useRouter();
+  const { user } = useAuth();
 
   const getPageTitle = () => {
     if (customTitle) return customTitle;
@@ -18,8 +19,17 @@ export default function Navbar({ customTitle }: { customTitle?: string }) {
     return path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
   };
 
-  // Don't show logout on auth pages
+  // Don't show header buttons on auth pages
   const isAuthPage = pathname === '/login' || pathname === '/signup';
+
+  const handleAdminClick = () => {
+    const password = prompt('Enter Admin Password:');
+    if (password === 'ujs') {
+      router.push('/admin');
+    } else if (password !== null) {
+      alert('Incorrect password');
+    }
+  };
 
   return (
     <nav className="navbar">
@@ -30,16 +40,13 @@ export default function Navbar({ customTitle }: { customTitle?: string }) {
 
       {user && !isAuthPage && (
         <div className="navbar-actions">
-          <div className="user-badge">
-            <User size={16} className="text-primary" />
-            <span className="text-small text-primary">{user.email}</span>
-          </div>
+          {/* Email display removed as requested */}
           <button
-            onClick={signOut}
+            onClick={handleAdminClick}
             className="btn-logout"
-            title="Sign out"
+            title="Admin Access"
           >
-            Logout
+            Admin
           </button>
         </div>
       )}
