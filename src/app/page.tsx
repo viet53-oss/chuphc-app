@@ -34,9 +34,9 @@ export default function Dashboard() {
       <div className="flex flex-col gap-3 w-full animate-fade-in">
 
         {/* HEADER: Score & Brand (Balanced) */}
-        <section className={`app-section !border-black bg-primary-tint !py-6 dashboard-header`}>
+        <section className={`app-section !border-black bg-primary-tint !py-4 dashboard-header`}>
           {/* Logo */}
-          <div style={{ maxWidth: '200px', width: '100%', height: 'auto', flexShrink: 0 }}>
+          <div style={{ maxWidth: '120px', width: '100%', height: 'auto', flexShrink: 0 }}>
             <img src="/logo.png" alt="Chu Logo" className="w-full h-full object-contain" />
           </div>
 
