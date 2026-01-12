@@ -78,15 +78,16 @@ export default function Dashboard() {
               <span className="text-small font-bold" style={{ color: p.color }}>{p.status.toUpperCase()}</span>
             </Link>
           ))}
+
         </div>
 
-        {/* Chat Bot Button */}
-        <div className="w-full flex items-center justify-center mt-8 mb-10">
-          <button className="bg-primary text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all" style={{ width: '50px', height: '50px' }}>
-            <img src="/bot-icon.png" alt="Chat" className="w-full h-full object-contain" />
-          </button>
-        </div>
+      </div>
 
+      {/* Chat Bot Button - Outside main container for true centering */}
+      <div className="w-screen flex items-center justify-center mt-8 mb-10">
+        <button className="bg-primary text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all" style={{ width: '50px', height: '50px' }}>
+          <img src="/bot-icon.png" alt="Chat" className="w-full h-full object-contain" />
+        </button>
       </div>
     </ProtectedRoute>
   );
