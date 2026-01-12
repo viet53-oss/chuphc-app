@@ -61,7 +61,9 @@ strong {
   background-color: #ffffff;
   border-bottom: 2px solid #000000;
   /* Matching heavy border style */
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .navbar-titles {
