@@ -128,19 +128,15 @@ export default function ChatBot() {
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
                     <button
                         onClick={() => setIsOpen(true)}
-                        className="group flex flex-col items-center gap-1"
+                        className="group flex flex-col items-center"
                     >
-                        <div className="relative transform transition-all group-hover:scale-110 active:scale-95" style={{ width: '35px', height: '35px' }}>
+                        <div className="relative transform transition-all group-hover:scale-110 active:scale-95" style={{ width: '20px', height: '20px' }}>
                             <img
                                 src="/bot-icon.png"
                                 alt="Chu Bot"
-                                className="w-full h-full object-contain drop-shadow-lg"
+                                className="w-full h-full object-contain"
                             />
-                            <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
                         </div>
-                        <span className="text-[7pt] font-black uppercase tracking-widest text-black/30 group-hover:text-primary transition-colors">
-                            Assistant
-                        </span>
                     </button>
                 </div>
             )}
