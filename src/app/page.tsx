@@ -224,7 +224,7 @@ export default function Dashboard() {
                 >
                   <img src="/support-icon.png" alt="Hold to speak" className="w-full h-full object-cover" />
                 </button>
-                <span className="text-[9pt] font-bold uppercase tracking-wider opacity-60">
+                <span className="text-[10pt] font-black uppercase tracking-wider text-black mt-1">
                   {isListening ? 'Listening...' : 'Hold to Speak'}
                 </span>
               </div>
