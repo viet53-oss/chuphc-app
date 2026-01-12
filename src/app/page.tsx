@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import Navbar from '@/components/Navbar';
 
 const PILLARS = [
   { title: 'Nutrition', icon: Apple, color: '#10b981', link: '/nutrition', status: 'On Track' },
@@ -102,10 +103,8 @@ export default function Dashboard() {
       {/* Fullscreen Chat Popup */}
       {isChatOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 200, backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
-          {/* Chat Header */}
-          <div style={{ padding: '24px', borderBottom: '2px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
-            <h1 className="text-[20pt] font-black text-center">Chat Assistant</h1>
-          </div>
+          {/* Use same header as other pages */}
+          <Navbar />
 
           {/* Chat Messages Area */}
           <div className="flex-1 p-6 overflow-y-auto" style={{ backgroundColor: '#f9fafb' }}>
