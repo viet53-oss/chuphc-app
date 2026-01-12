@@ -40,15 +40,19 @@ export const HEALTH_KNOWLEDGE = {
         ],
         faqs: [
             {
-                keywords: ["workout", "exercise", "gym", "fitness", "training"],
+                keywords: ["walk", "walking", "steps", "daily", "everyday", "how long", "how much", "minutes"],
+                answer: "Aim for at least 30 minutes of brisk walking daily, or 10,000 steps per day. This moderate activity improves cardiovascular health, boosts mood, and helps maintain a healthy weight."
+            },
+            {
+                keywords: ["workout", "exercise", "gym", "fitness", "training", "active", "activity"],
                 answer: "Aim for 150 minutes of moderate aerobic activity or 75 minutes of vigorous activity per week, plus strength training 2-3 times weekly."
             },
             {
-                keywords: ["cardio", "running", "walking", "jogging"],
+                keywords: ["cardio", "running", "jogging", "aerobic"],
                 answer: "Cardio is excellent for heart health! Start with brisk walking 30 minutes daily, then progress to jogging or running as your fitness improves."
             },
             {
-                keywords: ["weights", "strength", "muscle", "lifting"],
+                keywords: ["weights", "strength", "muscle", "lifting", "resistance"],
                 answer: "Strength training builds muscle, boosts metabolism, and strengthens bones. Start with bodyweight exercises, then add weights as you progress."
             }
         ]
