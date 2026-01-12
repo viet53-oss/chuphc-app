@@ -9,6 +9,7 @@
   --text-muted: #64748b;
   --border-width: 1px;
   --radius-lg: 16px;
+  --ease-spring: cubic-bezier(0.68, -0.6, 0.32, 1.6);
 }
 
 /* Standardized Font Size: 14pt (approx. 18.66px) */
