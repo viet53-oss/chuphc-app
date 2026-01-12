@@ -157,14 +157,21 @@ export default function Dashboard() {
           </div>
 
           {/* Chat Messages Area */}
-          <div className="flex-1 p-6 overflow-y-auto" style={{ backgroundColor: '#f9fafb' }}>
-            <div className="max-w-3xl mx-auto space-y-4">
-              {chatMessages.map((msg, index) => (
-                <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`p-4 rounded-2xl shadow-sm border-2 max-w-[80%] ${msg.role === 'user' ? 'bg-primary text-white border-primary' : 'bg-white border-gray-100'}`}>
-                    <p className="text-[13pt] font-bold">{msg.content}</p>
+          <div className="flex-1 overflow-y-auto" style={{ backgroundColor: '#f9fafb' }}>
+            <div className="flex flex-col gap-2">
+              {[...chatMessages].reverse().map((msg, index) => (
+                <section key={index} className="app-section p-1">
+                  <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`p-4 rounded-2xl shadow-sm border-2 max-w-[80%] ${msg.role === 'user' ? 'bg-primary text-white border-primary' : 'bg-white border-gray-100'}`}>
+                      <p className="text-[13pt] font-bold">{msg.content}</p>
+                      {msg.created_at && (
+                        <p className="text-[9pt] opacity-50 mt-1">
+                          {new Date(msg.created_at).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </section>
               ))}
             </div>
           </div>
