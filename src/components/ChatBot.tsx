@@ -125,21 +125,21 @@ export default function ChatBot() {
 
             {/* Center Bottom Home Button */}
             {!isOpen && isHome && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
                     <button
                         onClick={() => setIsOpen(true)}
-                        className="group flex flex-col items-center gap-1 animate-bounce-slow"
+                        className="group flex flex-col items-center gap-1"
                     >
-                        <div className="w-16 h-16 relative transform transition-all group-hover:scale-110 active:scale-95">
+                        <div className="relative transform transition-all group-hover:scale-110 active:scale-95" style={{ width: '35px', height: '35px' }}>
                             <img
                                 src="/bot-icon.png"
                                 alt="Chu Bot"
-                                className="w-full h-full object-contain drop-shadow-2xl"
+                                className="w-full h-full object-contain drop-shadow-lg"
                             />
-                            <div className="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+                            <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white animate-pulse" />
                         </div>
-                        <span className="text-[8pt] font-black uppercase tracking-widest text-black/30 group-hover:text-primary transition-colors">
-                            Ask Assistant
+                        <span className="text-[7pt] font-black uppercase tracking-widest text-black/30 group-hover:text-primary transition-colors">
+                            Assistant
                         </span>
                     </button>
                 </div>
