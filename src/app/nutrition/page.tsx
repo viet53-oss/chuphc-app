@@ -413,15 +413,7 @@ export default function NutritionPage() {
                     </div>
                 )}
 
-                {/* Bottom Navigation Buttons */}
-                <div className="flex justify-between px-1 mt-8 mb-10">
-                    <Link href="/" className="btn-logout">
-                        HOME
-                    </Link>
-                    <Link href="/" className="btn-logout">
-                        HOME
-                    </Link>
-                </div>
+
 
             </div>
         </ProtectedRoute >

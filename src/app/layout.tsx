@@ -41,7 +41,7 @@ export default function RootLayout({
             <main className="px-1">
               {children}
             </main>
-            {/* <BottomNav /> */}
+            <BottomNav />
           </div>
         </AuthProvider>
       </body>
