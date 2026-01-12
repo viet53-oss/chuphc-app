@@ -108,8 +108,8 @@ export default function Dashboard() {
             {/* Chat messages will go here */}
           </div>
 
-          {/* Close Buttons - Bottom Left and Right */}
-          <div className="p-6 flex justify-between">
+          {/* Close Buttons - Fixed at Bottom */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px', display: 'flex', justifyContent: 'space-between', backgroundColor: 'white' }}>
             <button
               onClick={() => setIsChatOpen(false)}
               className="btn-logout"
