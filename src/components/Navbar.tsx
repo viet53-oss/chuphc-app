@@ -1,11 +1,12 @@
 'use client';
 
 import { User } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Navbar({ customTitle }: { customTitle?: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, isAdmin, setIsAdmin } = useAuth();
 
   const getPageTitle = () => {
@@ -15,6 +16,7 @@ export default function Navbar({ customTitle }: { customTitle?: string }) {
     if (path === 'lifestyle-rx') return 'Lifestyle Prescription';
     if (path === 'login') return 'Sign In';
     if (path === 'signup') return 'Create Account';
+    if (path === 'settings') return 'Settings';
     return path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, ' ');
   };
 
@@ -45,6 +47,15 @@ export default function Navbar({ customTitle }: { customTitle?: string }) {
 
       {user && !isAuthPage && (
         <div className="navbar-actions">
+          <button
+            onClick={() => router.push('/settings')}
+            className="btn-logout"
+            title="Go to Settings"
+            style={{ marginRight: '8px' }}
+          >
+            Settings
+          </button>
+
           {isAdmin && (
             <span style={{
               color: '#d32f2f',
