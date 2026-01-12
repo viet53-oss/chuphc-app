@@ -35,6 +35,7 @@ export default function Dashboard() {
 
         {/* HEADER: Score & Brand (Balanced) */}
         <section className={`app-section !border-black bg-primary-tint !py-4 dashboard-header`}>
+          <img src="/logo.png" alt="Chu Precision Health" style={{ width: '150px' }} className="mb-2" />
 
 
           {/* Precision Score (One Line) */}
