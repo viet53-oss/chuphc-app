@@ -40,19 +40,19 @@ export default function Dashboard() {
             <img src="/logo.png" alt="Chu Logo" className="w-full h-full object-contain" />
           </div>
 
-          {/* Precision Score */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-primary uppercase font-bold tracking-wider" style={{ fontSize: '25pt' }}>Precision Score</span>
+          {/* Precision Score (One Line) */}
+          <div className="flex items-center gap-2">
+            <span className="text-primary uppercase font-bold tracking-wider" style={{ fontSize: '20pt' }}>PRECISION SCORE:</span>
             <div className="flex items-baseline gap-1">
-              <h1 className="title-xl" style={{ fontSize: '25pt' }}>84</h1>
-              <span className="font-bold opacity-30" style={{ fontSize: '25pt' }}>/100</span>
+              <h1 className="title-xl" style={{ fontSize: '20pt' }}>84</h1>
+              <span className="font-bold opacity-30" style={{ fontSize: '20pt' }}>/100</span>
             </div>
           </div>
 
-          {/* Weekly Status */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="opacity-40 uppercase font-bold tracking-wider" style={{ fontSize: '25pt' }}>Weekly Status</span>
-            <p className="font-bold text-primary" style={{ fontSize: '25pt' }}>On Target</p>
+          {/* Weekly Status (One Line) */}
+          <div className="flex items-center gap-2">
+            <span className="opacity-40 uppercase font-bold tracking-wider" style={{ fontSize: '20pt' }}>WEEKLY STATUS:</span>
+            <p className="font-bold text-primary" style={{ fontSize: '20pt' }}>On Target</p>
           </div>
         </section>
 
