@@ -217,7 +217,7 @@ export default function Dashboard() {
                 onMouseLeave={stopRecording}
                 onTouchStart={startRecording}
                 onTouchEnd={stopRecording}
-                className={`rounded-full shadow-xl flex items-center justify-center transition-all ${isListening ? 'bg-red-500 scale-110 animate-pulse' : 'bg-primary hover:scale-105'}`}
+                className={`rounded-2xl shadow-xl flex items-center justify-center transition-all ${isListening ? 'bg-red-500 scale-110 animate-pulse' : 'bg-primary hover:scale-105'}`}
                 style={{ width: '100px', height: '100px', touchAction: 'none' }}
                 title={isListening ? 'Listening...' : 'Hold to speak'}
               >
