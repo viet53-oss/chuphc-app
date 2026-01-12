@@ -81,7 +81,7 @@ export default function Dashboard() {
         </div>
 
         {/* Chat Bot Button */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <div className="w-full flex justify-center mt-8 mb-10">
           <button className="bg-primary text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all" style={{ width: '50px', height: '50px' }}>
             <img src="/bot-icon.png" alt="Chat" className="w-full h-full object-contain" />
           </button>
