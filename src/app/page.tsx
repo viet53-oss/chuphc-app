@@ -7,7 +7,8 @@ import {
   Zap,
   Moon,
   Users,
-  ShieldAlert
+  ShieldAlert,
+  Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -19,7 +20,8 @@ const PILLARS = [
   { title: 'Stress', icon: Zap, color: '#14b8a6', link: '/stress', status: 'Check' },
   { title: 'Sleep', icon: Moon, color: '#3b82f6', link: '/sleep', status: 'Good' },
   { title: 'Social', icon: Users, color: '#ef4444', link: '/social', status: 'Active' },
-  { title: 'Risky', icon: ShieldAlert, color: '#f97316', link: '/risky', status: 'Safe' }
+  { title: 'Risky', icon: ShieldAlert, color: '#f97316', link: '/risky', status: 'Safe' },
+  { title: 'Settings', icon: Settings, color: '#6b7280', link: '/settings', status: 'Options' }
 ];
 
 export default function Dashboard() {

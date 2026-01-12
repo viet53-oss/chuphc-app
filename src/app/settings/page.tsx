@@ -1,18 +1,28 @@
 'use client';
 
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { Settings as SettingsIcon, Home, Bell, User, Lock, Smartphone } from 'lucide-react';
+import { Settings, Home, User, Bell, Shield, Info } from 'lucide-react';
 import Link from 'next/link';
-import { colors, spacing, fontSize, styles, mergeStyles } from '@/lib/design-system';
+import { colors, spacing, fontSize } from '@/lib/design-system';
 
 export default function SettingsPage() {
     return (
         <ProtectedRoute>
 
-            <div style={styles.pageContainer}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xxl, width: '100%', padding: spacing.xs }}>
 
                 {/* Header Section */}
-                <section style={mergeStyles(styles.sectionPrimary, styles.centered, { gap: spacing.md })}>
+                <section style={{
+                    border: '2px solid black',
+                    borderRadius: '12px',
+                    backgroundColor: colors.primaryTint,
+                    padding: spacing.lg,
+                    margin: spacing.xs,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: spacing.md
+                }}>
                     <div style={{
                         backgroundColor: colors.white,
                         borderRadius: '12px',
@@ -22,93 +32,111 @@ export default function SettingsPage() {
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}>
-                        <SettingsIcon size={48} color={colors.secondary} />
+                        <Settings size={48} color={colors.gray} />
                     </div>
-                    <h1 style={mergeStyles(styles.heading1, { textAlign: 'center' })}>
-                        Account Settings
+                    <h1 style={{ fontSize: fontSize.xl, fontWeight: 'bold', color: colors.secondary, margin: 0, textAlign: 'center' }}>
+                        App Settings
                     </h1>
-                    <p style={mergeStyles(styles.smallText, { textAlign: 'center', fontSize: fontSize.sm })}>
-                        Manage your preferences and security
+                    <p style={{ fontSize: fontSize.sm, color: colors.gray, margin: 0, textAlign: 'center' }}>
+                        Configure your application preferences
                     </p>
                 </section>
 
-                {/* Profile Section */}
-                <section style={styles.section}>
-                    <h2 style={mergeStyles(styles.heading2, { marginBottom: spacing.md, display: 'flex', alignItems: 'center', gap: spacing.sm })}>
-                        <User size={24} /> Profile
-                    </h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: spacing.sm, backgroundColor: colors.background, borderRadius: '8px' }}>
-                            <span style={styles.bodyText}>Edit Profile Picture</span>
-                            <button style={mergeStyles(styles.button, styles.buttonBlack, { fontSize: fontSize.sm })}>Edit</button>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: spacing.sm, backgroundColor: colors.background, borderRadius: '8px' }}>
-                            <span style={styles.bodyText}>Change Personal Details</span>
-                            <button style={mergeStyles(styles.button, styles.buttonBlack, { fontSize: fontSize.sm })}>Update</button>
-                        </div>
-                    </div>
-                </section>
+                {/* Settings Menu */}
+                <section style={{
+                    border: '2px solid black',
+                    borderRadius: '12px',
+                    backgroundColor: colors.white,
+                    padding: spacing.md,
+                    margin: spacing.xs,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: spacing.sm
+                }}>
 
-                {/* Notifications */}
-                <section style={styles.section}>
-                    <h2 style={mergeStyles(styles.heading2, { marginBottom: spacing.md, display: 'flex', alignItems: 'center', gap: spacing.sm })}>
-                        <Bell size={24} /> Notifications
-                    </h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: spacing.sm, backgroundColor: colors.background, borderRadius: '8px' }}>
-                            <span style={styles.bodyText}>Push Notifications</span>
-                            <div style={{ width: '40px', height: '20px', backgroundColor: colors.green, borderRadius: '20px', position: 'relative' }}>
-                                <div style={{ width: '16px', height: '16px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', right: '2px', top: '2px' }} />
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: spacing.sm, backgroundColor: colors.background, borderRadius: '8px' }}>
-                            <span style={styles.bodyText}>Email Updates</span>
-                            <div style={{ width: '40px', height: '20px', backgroundColor: colors.gray, borderRadius: '20px', position: 'relative' }}>
-                                <div style={{ width: '16px', height: '16px', backgroundColor: 'white', borderRadius: '50%', position: 'absolute', left: '2px', top: '2px' }} />
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Device Settings */}
-                <section style={styles.section}>
-                    <h2 style={mergeStyles(styles.heading2, { marginBottom: spacing.md, display: 'flex', alignItems: 'center', gap: spacing.sm })}>
-                        <Smartphone size={24} /> Device
-                    </h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: spacing.sm, backgroundColor: colors.background, borderRadius: '8px' }}>
-                            <span style={styles.bodyText}>Auto-track Step Sensitivity</span>
-                            <span style={{ fontSize: fontSize.sm, fontWeight: 'bold' }}>Normal</span>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Security */}
-                <section style={styles.section}>
-                    <h2 style={mergeStyles(styles.heading2, { marginBottom: spacing.md, display: 'flex', alignItems: 'center', gap: spacing.sm })}>
-                        <Lock size={24} /> Security
-                    </h2>
-                    <button style={{
-                        ...styles.button,
-                        backgroundColor: colors.white,
-                        color: colors.red,
-                        border: `2px solid ${colors.red}`,
-                        width: '100%'
+                    {/* Profile Item */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing.md,
+                        padding: spacing.md,
+                        borderBottom: '1px solid #e5e7eb',
+                        cursor: 'pointer'
                     }}>
-                        Change Password
-                    </button>
+                        <User size={24} color={colors.secondary} />
+                        <div style={{ flex: 1 }}>
+                            <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', margin: 0 }}>My Profile</h3>
+                            <p style={{ fontSize: fontSize.sm, color: colors.gray, margin: 0 }}>Manage your personal information</p>
+                        </div>
+                    </div>
+
+                    {/* Notifications Item */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing.md,
+                        padding: spacing.md,
+                        borderBottom: '1px solid #e5e7eb',
+                        cursor: 'pointer'
+                    }}>
+                        <Bell size={24} color={colors.secondary} />
+                        <div style={{ flex: 1 }}>
+                            <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', margin: 0 }}>Notifications</h3>
+                            <p style={{ fontSize: fontSize.sm, color: colors.gray, margin: 0 }}>Configure alerts and reminders</p>
+                        </div>
+                    </div>
+
+                    {/* Privacy Item */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing.md,
+                        padding: spacing.md,
+                        borderBottom: '1px solid #e5e7eb',
+                        cursor: 'pointer'
+                    }}>
+                        <Shield size={24} color={colors.secondary} />
+                        <div style={{ flex: 1 }}>
+                            <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', margin: 0 }}>Privacy & Security</h3>
+                            <p style={{ fontSize: fontSize.sm, color: colors.gray, margin: 0 }}>Password and data settings</p>
+                        </div>
+                    </div>
+
+                    {/* About Item */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing.md,
+                        padding: spacing.md,
+                        cursor: 'pointer'
+                    }}>
+                        <Info size={24} color={colors.secondary} />
+                        <div style={{ flex: 1 }}>
+                            <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', margin: 0 }}>About</h3>
+                            <p style={{ fontSize: fontSize.sm, color: colors.gray, margin: 0 }}>Version 1.0.0</p>
+                        </div>
+                    </div>
+
                 </section>
 
                 {/* Home Button */}
                 <Link href="/" style={{ textDecoration: 'none' }}>
-                    <button style={mergeStyles(styles.button, styles.buttonBlack, {
+                    <button style={{
                         width: '100%',
+                        padding: spacing.lg,
+                        backgroundColor: colors.black,
+                        color: colors.white,
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: fontSize.base,
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: spacing.sm,
                         margin: spacing.xs
-                    })}>
+                    }}>
                         <Home size={20} />
                         Back to Home
                     </button>
