@@ -51,6 +51,51 @@ strong {
   background-color: #ffffff;
 }
 
+/* NAVBAR STYLES */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 16px 24px;
+  background-color: #ffffff;
+  border-bottom: 2px solid #000000;
+  /* Matching heavy border style */
+  position: relative;
+}
+
+.navbar-titles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  /* Ensure it doesn't wrap awkwardly */
+  flex-shrink: 0;
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background-color: rgba(45, 90, 39, 0.04);
+  /* primary tint */
+  border-radius: 999px;
+}
+
+@media (max-width: 640px) {
+  .user-badge {
+    display: none;
+    /* Hide email on small screens if desired, or adjust */
+    /* Previous code had hidden sm:flex, so keeping logic */
+  }
+}
+
 /* Overriding specific utility classes to respect the 14pt rule */
 .title-xl,
 .title-lg,
@@ -82,7 +127,7 @@ main {
   gap: 16px;
 }
 
-/* UTILITIES */
+/* UTILITIES (Keep basic ones used elsewhere or legacy) */
 .flex {
   display: flex;
 }
@@ -124,6 +169,10 @@ main {
   color: var(--primary);
 }
 
+.opacity-40 {
+  opacity: 0.4;
+}
+
 .pillar-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -137,4 +186,35 @@ a {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+.btn-logout {
+  background-color: #000000;
+  color: #ffffff;
+  border-radius: 9999px;
+  padding: 8px 20px;
+  font-size: 15pt;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-logout:hover {
+  opacity: 0.8;
+}
+
+/* DASHBOARD HEADER - ALWAYS CENTERED STACK */
+.dashboard-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  /* Tighter spacing between elements */
+  width: 100%;
+  text-align: center;
 }

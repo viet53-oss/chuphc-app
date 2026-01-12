@@ -34,21 +34,24 @@ export default function Dashboard() {
       <div className="flex flex-col gap-3 w-full animate-fade-in">
 
         {/* HEADER: Score & Brand (Balanced) */}
-        <section className="app-section flex items-center justify-between !border-black bg-primary-tint !py-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 shrink-0">
-              <img src="/logo.png" alt="Chu Logo" className="w-full h-full object-contain" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-small text-primary">Precision Score</span>
-              <div className="flex items-baseline gap-1">
-                <h1 className="title-xl">84</h1>
-                <span className="text-body font-bold opacity-30">/100</span>
-              </div>
+        <section className={`app-section !border-black bg-primary-tint !py-6 dashboard-header`}>
+          {/* Logo */}
+          <div style={{ maxWidth: '200px', width: '100%', height: 'auto', flexShrink: 0 }}>
+            <img src="/logo.png" alt="Chu Logo" className="w-full h-full object-contain" />
+          </div>
+
+          {/* Precision Score */}
+          <div className="flex flex-col items-center">
+            <span className="text-small text-primary uppercase font-bold tracking-wider">Precision Score</span>
+            <div className="flex items-baseline gap-1">
+              <h1 className="title-xl">84</h1>
+              <span className="text-body font-bold opacity-30">/100</span>
             </div>
           </div>
-          <div className="text-right">
-            <span className="text-small opacity-40">Weekly Status</span>
+
+          {/* Weekly Status */}
+          <div className="flex flex-col items-center">
+            <span className="text-small opacity-40 uppercase font-bold tracking-wider">Weekly Status</span>
             <p className="text-body font-bold text-primary">On Target</p>
           </div>
         </section>
