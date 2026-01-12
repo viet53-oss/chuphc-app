@@ -167,14 +167,11 @@ export default function GlobalChat() {
                     <div style={{
                         position: 'relative',
                         width: '100%',
-                        maxWidth: '400px',
-                        height: '85vh',
+                        height: '100%',
                         backgroundColor: 'white',
-                        borderRadius: '24px',
                         display: 'flex',
                         flexDirection: 'column',
-                        overflow: 'hidden',
-                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+                        overflow: 'hidden'
                     }}>
 
                         {/* Header */}
