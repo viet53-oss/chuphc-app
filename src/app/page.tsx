@@ -230,28 +230,24 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Voice Input Section */}
-          <div style={{ padding: '24px', borderTop: '2px solid #e5e7eb', backgroundColor: 'white' }}>
-            <div className="max-w-3xl mx-auto flex flex-col items-center gap-4">
-              <button
-                onMouseDown={startRecording}
-                onMouseUp={stopRecording}
-                onMouseLeave={stopRecording}
-                onTouchStart={startRecording}
-                onTouchEnd={stopRecording}
-                className={`w-20 h-20 rounded-full shadow-xl flex items-center justify-center transition-all ${isListening ? 'bg-red-500 scale-110 animate-pulse' : 'bg-primary hover:scale-105'}`}
-                style={{ touchAction: 'none' }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                  <line x1="12" x2="12" y1="19" y2="22" />
-                </svg>
-              </button>
-              <p className="text-[10pt] font-bold text-gray-500 uppercase tracking-widest">
-                {isListening ? 'Listening...' : 'Hold to speak'}
-              </p>
-            </div>
+          {/* Voice Input Button - Top Right */}
+          <div style={{ position: 'fixed', top: '100px', right: '24px', zIndex: 300 }}>
+            <button
+              onMouseDown={startRecording}
+              onMouseUp={stopRecording}
+              onMouseLeave={stopRecording}
+              onTouchStart={startRecording}
+              onTouchEnd={stopRecording}
+              className={`w-16 h-16 rounded-full shadow-xl flex items-center justify-center transition-all ${isListening ? 'bg-red-500 scale-110 animate-pulse' : 'bg-primary hover:scale-105'}`}
+              style={{ touchAction: 'none' }}
+              title={isListening ? 'Listening...' : 'Hold to speak'}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" x2="12" y1="19" y2="22" />
+              </svg>
+            </button>
           </div>
 
           {/* Close Buttons - Fixed at Bottom */}
