@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ChatBot from "@/components/ChatBot";
 
@@ -42,7 +41,7 @@ export default function RootLayout({
             <main className="px-1">
               {children}
             </main>
-            <BottomNav />
+
             <ChatBot />
           </div>
         </AuthProvider>
