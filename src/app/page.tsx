@@ -41,18 +41,18 @@ export default function Dashboard() {
           </div>
 
           {/* Precision Score */}
-          <div className="flex flex-col items-center">
-            <span className="text-small text-primary uppercase font-bold tracking-wider">Precision Score</span>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-primary uppercase font-bold tracking-wider" style={{ fontSize: '25pt' }}>Precision Score</span>
             <div className="flex items-baseline gap-1">
-              <h1 className="title-xl">84</h1>
-              <span className="text-body font-bold opacity-30">/100</span>
+              <h1 className="title-xl" style={{ fontSize: '25pt' }}>84</h1>
+              <span className="font-bold opacity-30" style={{ fontSize: '25pt' }}>/100</span>
             </div>
           </div>
 
           {/* Weekly Status */}
-          <div className="flex flex-col items-center">
-            <span className="text-small opacity-40 uppercase font-bold tracking-wider">Weekly Status</span>
-            <p className="text-body font-bold text-primary">On Target</p>
+          <div className="flex flex-col items-center gap-1">
+            <span className="opacity-40 uppercase font-bold tracking-wider" style={{ fontSize: '25pt' }}>Weekly Status</span>
+            <p className="font-bold text-primary" style={{ fontSize: '25pt' }}>On Target</p>
           </div>
         </section>
 
