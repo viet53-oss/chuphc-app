@@ -147,6 +147,15 @@ export default function Dashboard() {
           {/* Use same header as other pages */}
           <Navbar customTitle="Chat Conversation" />
 
+          {/* Chat Summary Section */}
+          <div className="app-section !border-black bg-primary-tint !py-4 mx-1 mt-3">
+            <h3 className="text-[16pt] font-black uppercase mb-2">💬 Chat Summary</h3>
+            <div className="flex flex-col gap-1">
+              <p className="text-[13pt] font-bold">Total Messages: {chatMessages.length}</p>
+              <p className="text-[11pt] opacity-70">Your health assistant is ready to help</p>
+            </div>
+          </div>
+
           {/* Chat Messages Area */}
           <div className="flex-1 p-6 overflow-y-auto" style={{ backgroundColor: '#f9fafb' }}>
             <div className="max-w-3xl mx-auto space-y-4">
