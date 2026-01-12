@@ -202,9 +202,18 @@ export default function GlobalChat() {
                             </div>
                             <button
                                 onClick={() => setIsChatOpen(false)}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                                style={{
+                                    backgroundColor: 'black',
+                                    color: 'white',
+                                    borderRadius: '9999px',
+                                    padding: '8px 16px',
+                                    fontWeight: 'bold',
+                                    fontSize: fontSize.sm,
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                }}
                             >
-                                <X size={24} color="black" />
+                                CLOSE
                             </button>
                         </div>
 
@@ -282,45 +291,7 @@ export default function GlobalChat() {
                             </span>
                         </div>
 
-                        {/* Footer with Double Close Buttons (As requested) */}
-                        <div style={{
-                            padding: '24px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            backgroundColor: 'white',
-                            borderTop: '1px solid #e5e7eb' // subtle separator
-                        }}>
-                            <button
-                                onClick={() => setIsChatOpen(false)}
-                                style={{
-                                    backgroundColor: 'black',
-                                    color: 'white',
-                                    borderRadius: '9999px', // rounded-full
-                                    padding: '12px 24px',
-                                    fontWeight: 'bold',
-                                    fontSize: fontSize.base,
-                                    border: 'none',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                CLOSE
-                            </button>
-                            <button
-                                onClick={() => setIsChatOpen(false)}
-                                style={{
-                                    backgroundColor: 'black',
-                                    color: 'white',
-                                    borderRadius: '9999px',
-                                    padding: '12px 24px',
-                                    fontWeight: 'bold',
-                                    fontSize: fontSize.base,
-                                    border: 'none',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                CLOSE
-                            </button>
-                        </div>
+
 
                     </div>
                 </div>
