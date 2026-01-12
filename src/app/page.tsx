@@ -42,17 +42,16 @@ export default function Dashboard() {
 
           {/* Precision Score (One Line) */}
           <div className="flex items-center gap-2">
-            <span className="text-primary uppercase font-bold tracking-wider" style={{ fontSize: '20pt' }}>PRECISION SCORE:</span>
+            <span className="uppercase font-bold tracking-wider" style={{ fontSize: '20pt', color: '#000000' }}>PRECISION SCORE:</span>
             <div className="flex items-baseline gap-1">
-              <h1 className="title-xl" style={{ fontSize: '20pt' }}>84</h1>
-              <span className="font-bold opacity-30" style={{ fontSize: '20pt' }}>/100</span>
+              <span className="font-bold" style={{ fontSize: '20pt', color: '#000000' }}>84/100</span>
             </div>
           </div>
 
           {/* Weekly Status (One Line) */}
           <div className="flex items-center gap-2">
-            <span className="opacity-40 uppercase font-bold tracking-wider" style={{ fontSize: '20pt' }}>WEEKLY STATUS:</span>
-            <p className="font-bold text-primary" style={{ fontSize: '20pt' }}>On Target</p>
+            <span className="uppercase font-bold tracking-wider" style={{ fontSize: '20pt', color: '#000000' }}>WEEKLY STATUS:</span>
+            <p className="font-bold" style={{ fontSize: '20pt', color: '#000000' }}>On Target</p>
           </div>
         </section>
 
