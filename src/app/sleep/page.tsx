@@ -1,177 +1,113 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { Moon, Plus, X } from 'lucide-react';
+import { Moon, Plus, X, Star, AlarmClock, Bed, Battery } from 'lucide-react';
 
 export default function SleepPage() {
-    const { user } = useAuth();
-    const [showForm, setShowForm] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        sleep_start: '',
-        sleep_end: '',
-        quality: '5',
-        notes: '',
-    });
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!user) return;
-
-        setLoading(true);
-        try {
-            const { error } = await supabase.from('sleep_logs').insert([
-                {
-                    user_id: user.id,
-                    sleep_start: new Date(formData.sleep_start).toISOString(),
-                    sleep_end: new Date(formData.sleep_end).toISOString(),
-                    quality: parseInt(formData.quality),
-                    notes: formData.notes,
-                },
-            ]);
-
-            if (error) throw error;
-
-            setFormData({
-                sleep_start: '',
-                sleep_end: '',
-                quality: '5',
-                notes: '',
-            });
-            setShowForm(false);
-            alert('Sleep log saved successfully!');
-        } catch (error: any) {
-            alert('Error logging sleep: ' + error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const calculateDuration = () => {
-        if (formData.sleep_start && formData.sleep_end) {
-            const start = new Date(formData.sleep_start);
-            const end = new Date(formData.sleep_end);
-            const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-            return hours > 0 ? hours.toFixed(1) : '0';
-        }
-        return '0';
-    };
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     return (
         <ProtectedRoute>
-            <div className="flex flex-col gap-3 w-full animate-fade-in pb-20">
-                <div className="app-section flex items-center justify-between !border-[#3b82f6] bg-[#3b82f6]/10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-[#3b82f6] rounded-lg flex items-center justify-center">
-                            <Moon size={24} className="text-white" />
+            <div className="flex flex-col gap-4 w-full animate-fade-in pb-24">
+
+                {/* Dashboard Summary Card */}
+                <section className="app-section bg-gradient-to-br from-[#3b82f6] to-[#1d4ed8] !border-none text-white p-6 shadow-xl relative overflow-hidden">
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Moon size={20} />
+                            <span className="text-small font-bold uppercase tracking-widest opacity-80">Recovery Sync</span>
                         </div>
-                        <div>
-                            <h2 className="title-md">Sleep Tracking</h2>
-                            <p className="text-small opacity-60">Monitor your sleep</p>
+                        <h2 className="text-[28pt] font-black leading-tight mb-4">Deep Recovery</h2>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
+                                <p className="text-[10pt] font-bold opacity-80 uppercase leading-none mb-1">Avg Duration</p>
+                                <p className="text-[18pt] font-black">7h 20m</p>
+                            </div>
+                            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
+                                <p className="text-[10pt] font-bold opacity-80 uppercase leading-none mb-1">Quality</p>
+                                <p className="text-[18pt] font-black">88%</p>
+                            </div>
                         </div>
                     </div>
+                </section>
+
+                {/* Main Action Area */}
+                <div className="px-1">
                     <button
-                        onClick={() => setShowForm(!showForm)}
-                        className="p-2 bg-[#3b82f6] text-white rounded-full hover:bg-[#3b82f6]/90 active:scale-95 transition-all"
+                        onClick={() => setIsModalOpen(true)}
+                        className="w-full bg-black text-white p-6 rounded-[2rem] flex items-center justify-between shadow-2xl hover:scale-[1.02] active:scale-95 transition-all"
                     >
-                        {showForm ? <X size={20} /> : <Plus size={20} />}
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-[#3b82f6] rounded-2xl flex items-center justify-center shadow-lg transform -rotate-6">
+                                <Bed size={28} className="text-white" />
+                            </div>
+                            <div className="text-left">
+                                <h3 className="text-[15pt] font-black uppercase tracking-tight">Log Recovery</h3>
+                                <p className="text-[10pt] opacity-60 font-bold uppercase tracking-wider">Sync your sleep data</p>
+                            </div>
+                        </div>
+                        <Battery className="text-[#3b82f6]" />
                     </button>
                 </div>
 
-                {showForm && (
-                    <div className="app-section !p-6">
-                        <h3 className="title-md mb-4">Log Sleep</h3>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-body font-bold mb-2">Bedtime *</label>
-                                <input
-                                    type="datetime-local"
-                                    required
-                                    value={formData.sleep_start}
-                                    onChange={(e) => setFormData({ ...formData, sleep_start: e.target.value })}
-                                    className="w-full px-4 py-3 border-2 border-black rounded-lg text-body focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
-                                />
-                            </div>
+                {/* Insights Grid */}
+                <div className="grid grid-cols-2 gap-3 px-1">
+                    <div className="app-section !p-4 border-2 border-black bg-primary-tint">
+                        <AlarmClock size={20} className="text-[#3b82f6] mb-2" />
+                        <p className="text-[9pt] font-black uppercase opacity-40">Bedtime Goal</p>
+                        <p className="text-[14pt] font-black uppercase">10:30 PM</p>
+                    </div>
+                    <div className="app-section !p-4 border-2 border-black bg-primary-tint">
+                        <Star size={20} className="text-[#f59e0b] mb-2" />
+                        <p className="text-[9pt] font-black uppercase opacity-40">Consistency</p>
+                        <p className="text-[14pt] font-black uppercase">GOLD</p>
+                    </div>
+                </div>
 
-                            <div>
-                                <label className="block text-body font-bold mb-2">Wake Time *</label>
-                                <input
-                                    type="datetime-local"
-                                    required
-                                    value={formData.sleep_end}
-                                    onChange={(e) => setFormData({ ...formData, sleep_end: e.target.value })}
-                                    className="w-full px-4 py-3 border-2 border-black rounded-lg text-body focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
-                                />
-                            </div>
+                {/* MODAL POPUP - LOG SLEEP */}
+                {isModalOpen && (
+                    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center animate-in fade-in transition-all">
+                        <div className="bg-white w-full sm:max-w-lg h-[80vh] sm:h-auto rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
 
-                            {formData.sleep_start && formData.sleep_end && (
-                                <div className="p-3 bg-[#3b82f6]/10 rounded-lg border-2 border-[#3b82f6]">
-                                    <p className="text-small opacity-60">Total Sleep Duration</p>
-                                    <p className="title-lg text-[#3b82f6]">{calculateDuration()} hours</p>
+                            {/* Modal Header */}
+                            <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                                <div>
+                                    <h2 className="text-[20pt] font-black uppercase tracking-tighter">Sleep Log</h2>
+                                    <p className="text-[10pt] font-bold text-gray-400 uppercase tracking-widest">Recovery Record</p>
                                 </div>
-                            )}
+                                <button
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
 
-                            <div>
-                                <label className="block text-body font-bold mb-2">
-                                    Sleep Quality (1-10)
-                                </label>
-                                <input
-                                    type="range"
-                                    min="1"
-                                    max="10"
-                                    value={formData.quality}
-                                    onChange={(e) => setFormData({ ...formData, quality: e.target.value })}
-                                    className="w-full"
-                                />
-                                <div className="flex justify-between text-small opacity-60 mt-1">
-                                    <span>1 - Poor</span>
-                                    <span className="font-bold text-[#3b82f6] text-body">{formData.quality}</span>
-                                    <span>10 - Excellent</span>
+                            {/* Modal Content */}
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-10">
+                                <div className="space-y-4">
+                                    <div className="space-y-1">
+                                        <label className="text-[10pt] font-black uppercase text-gray-400 ml-1">Hours Rested*</label>
+                                        <input type="number" step="0.5" placeholder="8.0" className="w-full bg-gray-50 border-2 border-transparent focus:border-[#3b82f6] rounded-2xl p-4 text-[12pt] font-bold outline-none transition-all" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10pt] font-black uppercase text-gray-400 ml-1">Quality (1-10)</label>
+                                        <input type="range" min="1" max="10" className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#3b82f6]" />
+                                    </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-body font-bold mb-2">Notes</label>
-                                <textarea
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    placeholder="How did you sleep? Any interruptions?"
-                                    rows={3}
-                                    className="w-full px-4 py-3 border-2 border-black rounded-lg text-body focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
-                                />
+                            {/* Modal Footer */}
+                            <div className="p-6 border-t border-gray-100 bg-white grid grid-cols-2 gap-4">
+                                <button onClick={() => setIsModalOpen(false)} className="py-4 bg-gray-100 text-gray-500 rounded-2xl font-black uppercase tracking-widest">Cancel</button>
+                                <button onClick={() => setIsModalOpen(false)} className="py-4 bg-[#3b82f6] text-white rounded-2xl font-black uppercase tracking-widest">Save Sleep</button>
                             </div>
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-[#3b82f6] text-white py-3 rounded-lg font-bold text-body hover:bg-[#3b82f6]/90 active:scale-95 transition-all disabled:opacity-50"
-                            >
-                                {loading ? 'Saving...' : 'Log Sleep'}
-                            </button>
-                        </form>
+                        </div>
                     </div>
                 )}
 
-                <div className="app-section !p-6 bg-[#3b82f6]/5">
-                    <h3 className="title-md mb-2">Better Sleep</h3>
-                    <p className="text-body opacity-60 mb-4">
-                        Quality sleep is essential for physical and mental health. Aim for 7-9 hours per night.
-                    </p>
-                    <div className="space-y-2">
-                        <div className="p-3 bg-white rounded-lg border-2 border-black">
-                            <p className="text-small opacity-60 mb-1">Sleep Tips:</p>
-                            <ul className="text-small space-y-1">
-                                <li>• Keep a consistent sleep schedule</li>
-                                <li>• Avoid screens 1 hour before bed</li>
-                                <li>• Keep your bedroom cool and dark</li>
-                                <li>• Avoid caffeine after 2 PM</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
             </div>
         </ProtectedRoute>
     );
