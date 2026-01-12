@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -39,7 +39,9 @@ export default function Dashboard() {
   const [chatMessages, setChatMessages] = useState<Array<{ role: string; content: string; created_at?: string }>>([
     { role: 'bot', content: "Hello! I'm your Chu Health Assistant. Ask me anything about your health!" }
   ]);
+  const [isListening, setIsListening] = useState(false);
   const { user } = useAuth();
+  const recognitionRef = useRef<any>(null);
 
   // Load chat messages from Supabase
   useEffect(() => {
@@ -47,6 +49,25 @@ export default function Dashboard() {
       loadChatMessages();
     }
   }, [user, isChatOpen]);
+
+  // Setup speech recognition
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        handleVoiceInput(transcript);
+      };
+
+      recognitionRef.current.onerror = () => setIsListening(false);
+      recognitionRef.current.onend = () => setIsListening(false);
+    }
+  }, []);
 
   const loadChatMessages = async () => {
     if (!user) return;
@@ -74,6 +95,37 @@ export default function Dashboard() {
       role,
       content
     }]);
+  };
+
+  const handleVoiceInput = async (text: string) => {
+    if (!text.trim()) return;
+
+    // Add user message
+    const userMessage = { role: 'user', content: text };
+    setChatMessages(prev => [...prev, userMessage]);
+    await saveChatMessage('user', text);
+
+    // Simple bot response (you can enhance this later)
+    const botResponse = { role: 'bot', content: `I heard you say: "${text}". How can I help you with that?` };
+    setTimeout(async () => {
+      setChatMessages(prev => [...prev, botResponse]);
+      await saveChatMessage('bot', botResponse.content);
+    }, 1000);
+  };
+
+  const startRecording = () => {
+    if (recognitionRef.current) {
+      setIsListening(true);
+      recognitionRef.current.start();
+      if ('vibrate' in navigator) navigator.vibrate(50);
+    }
+  };
+
+  const stopRecording = () => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
   };
 
   return (
@@ -180,15 +232,23 @@ export default function Dashboard() {
           <div style={{ padding: '24px', borderTop: '2px solid #e5e7eb', backgroundColor: 'white' }}>
             <div className="max-w-3xl mx-auto flex flex-col items-center gap-4">
               <button
-                className="w-20 h-20 bg-primary text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+                onMouseDown={startRecording}
+                onMouseUp={stopRecording}
+                onMouseLeave={stopRecording}
+                onTouchStart={startRecording}
+                onTouchEnd={stopRecording}
+                className={`w-20 h-20 rounded-full shadow-xl flex items-center justify-center transition-all ${isListening ? 'bg-red-500 scale-110 animate-pulse' : 'bg-primary hover:scale-105'}`}
+                style={{ touchAction: 'none' }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                   <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                   <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                   <line x1="12" x2="12" y1="19" y2="22" />
                 </svg>
               </button>
-              <p className="text-[10pt] font-bold text-gray-500 uppercase tracking-widest">Hold to speak</p>
+              <p className="text-[10pt] font-bold text-gray-500 uppercase tracking-widest">
+                {isListening ? 'Listening...' : 'Hold to speak'}
+              </p>
             </div>
           </div>
 
