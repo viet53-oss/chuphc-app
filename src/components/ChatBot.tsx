@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Bot, User, Sparkles, Mic, Volume2, VolumeX } from 'lucide-react';
+import { X, Send, Bot, Sparkles, Mic, Volume2, VolumeX } from 'lucide-react';
 import { DIET_BIBLE } from '@/lib/diet-knowledge';
+import { usePathname } from 'next/navigation';
 
 export default function ChatBot() {
+    const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [isListening, setIsListening] = useState(false);
-    const [isSpeaking, setIsSpeaking] = useState(true); // Toggle for Voice Replies
+    const [isSpeaking, setIsSpeaking] = useState(true);
     const [messages, setMessages] = useState([
         { role: 'bot', content: 'Hello! I am your Chu Precision Health Assistant. How can I help you optimize your health today?' }
     ]);
@@ -15,6 +17,9 @@ export default function ChatBot() {
     const scrollRef = useRef<HTMLDivElement>(null);
     const recognitionRef = useRef<any>(null);
     const synthRef = useRef<SpeechSynthesis | null>(null);
+
+    // Only show on the home screen as requested
+    const isHome = pathname === '/';
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -44,10 +49,7 @@ export default function ChatBot() {
 
     const speak = (text: string) => {
         if (!isSpeaking || !synthRef.current) return;
-
-        // Stop any current speech
         synthRef.current.cancel();
-
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
@@ -64,7 +66,6 @@ export default function ChatBot() {
         setIsOpen(true);
 
         let botResponse = DIET_BIBLE.default;
-
         for (const faq of DIET_BIBLE.faqs) {
             if (faq.keywords.some(keyword => currentInput.includes(keyword))) {
                 botResponse = faq.answer;
@@ -79,7 +80,7 @@ export default function ChatBot() {
         setTimeout(() => {
             const botMsg = { role: 'bot', content: botResponse };
             setMessages(prev => [...prev, botMsg]);
-            speak(botResponse); // Trigger Voice Reply
+            speak(botResponse);
         }, 800);
     };
 
@@ -91,10 +92,9 @@ export default function ChatBot() {
 
     const startRecording = (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         if (recognitionRef.current) {
-            // Cancel any speaking when user starts talking
             if (synthRef.current) synthRef.current.cancel();
-
             setIsListening(true);
             recognitionRef.current.start();
             if ('vibrate' in navigator) navigator.vibrate(50);
@@ -108,32 +108,42 @@ export default function ChatBot() {
         }
     };
 
+    if (!isHome && !isOpen) return null;
+
     return (
         <>
             {/* Listening Overlay */}
             {isListening && (
-                <div className="fixed inset-0 z-[250] bg-black/60 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-300">
                     <div className="w-40 h-40 bg-primary rounded-full flex items-center justify-center animate-pulse shadow-[0_0_80px_rgba(45,90,39,0.8)]">
                         <Mic size={60} className="text-white" />
                     </div>
                     <h2 className="mt-10 text-[24pt] font-black uppercase text-white tracking-[0.2em] animate-bounce">Listening...</h2>
-                    <p className="mt-4 text-white/40 font-bold uppercase tracking-widest text-[12pt]">Give me your health question</p>
+                    <p className="mt-4 text-white/40 font-bold uppercase tracking-widest text-[12pt]">Ask your health question</p>
                 </div>
             )}
 
-            {/* Floating Toggle Button */}
-            <button
-                onMouseDown={startRecording}
-                onMouseUp={stopRecording}
-                onMouseLeave={stopRecording}
-                onTouchStart={startRecording}
-                onTouchEnd={stopRecording}
-                className={`fixed bottom-6 right-6 z-50 w-20 h-20 rounded-full bg-black text-white shadow-3xl flex flex-col items-center justify-center transition-all hover:scale-105 active:scale-90 border-4 border-white select-none ${isOpen ? 'scale-0 opacity-0 translate-y-10' : 'scale-100 opacity-100 translate-y-0'}`}
-                style={{ touchAction: 'none' }}
-            >
-                <Mic size={28} />
-                <span className="text-[7pt] font-black uppercase tracking-tighter opacity-70 mt-1">HOLD TO ASK</span>
-            </button>
+            {/* Center Bottom Home Button */}
+            {!isOpen && isHome && (
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
+                    <button
+                        onClick={() => setIsOpen(true)}
+                        className="group flex flex-col items-center gap-2 animate-bounce-slow"
+                    >
+                        <div className="w-24 h-24 relative transform transition-all group-hover:scale-110 active:scale-95">
+                            <img
+                                src="/bot-icon.png"
+                                alt="Chu Bot"
+                                className="w-full h-full object-contain drop-shadow-2xl"
+                            />
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-4 border-white animate-pulse" />
+                        </div>
+                        <span className="text-[10pt] font-black uppercase tracking-widest text-black/40 group-hover:text-primary transition-colors">
+                            Ask Assistant
+                        </span>
+                    </button>
+                </div>
+            )}
 
             {/* FULLSCREEN Chat Window */}
             <div className={`fixed inset-0 z-[200] bg-white flex flex-col overflow-hidden transition-all duration-500 ease-spring ${isOpen ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-full opacity-0 scale-95 pointer-events-none'}`}>
@@ -141,19 +151,18 @@ export default function ChatBot() {
                 {/* Fullscreen Header */}
                 <div className="bg-black text-white p-8 pt-12 flex items-center justify-between shadow-lg">
                     <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 bg-primary rounded-[1.5rem] flex items-center justify-center transform -rotate-3 shadow-xl">
-                            <Bot size={32} className="text-white" />
+                        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center p-2 transform -rotate-3 shadow-xl">
+                            <img src="/bot-icon.png" alt="Bot" className="w-full h-full object-contain" />
                         </div>
                         <div>
                             <h3 className="text-[20pt] font-black uppercase tracking-tighter leading-tight">Chu Assistant</h3>
                             <div className="flex items-center gap-2">
                                 <span className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse" />
-                                <span className="text-[10pt] font-bold opacity-60 uppercase tracking-widest">Precision AI Live</span>
+                                <span className="text-[10pt] font-bold opacity-60 uppercase tracking-widest">Precision Specialist</span>
                             </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        {/* Voice Toggle */}
                         <button
                             onClick={() => setIsSpeaking(!isSpeaking)}
                             className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all active:scale-90 ${isSpeaking ? 'bg-primary/20 text-primary border-2 border-primary/20' : 'bg-gray-100 text-gray-400'}`}
@@ -179,7 +188,7 @@ export default function ChatBot() {
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-4 duration-500`}>
                                 <div className={`p-6 sm:p-8 rounded-[2.5rem] flex gap-5 shadow-2xl ${msg.role === 'user' ? 'max-w-[85%] bg-black text-white rounded-tr-none' : 'max-w-full bg-white border-2 border-gray-100 rounded-tl-none'}`}>
                                     {msg.role === 'bot' && (
-                                        <div className="shrink-0 mt-1">
+                                        <div className="shrink-0 mt-2">
                                             <Sparkles size={24} className="text-primary animate-pulse" />
                                         </div>
                                     )}
@@ -199,7 +208,7 @@ export default function ChatBot() {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                                placeholder="Type a follow-up..."
+                                placeholder="Type your message..."
                                 className="w-full bg-gray-100 rounded-[2rem] p-6 pr-20 text-[14pt] font-bold outline-none border-2 border-transparent focus:border-black transition-all shadow-inner"
                             />
                             <button
@@ -210,16 +219,16 @@ export default function ChatBot() {
                             </button>
                         </div>
 
-                        {/* Inline Voice Button for continuing chat */}
                         <button
                             onMouseDown={startRecording}
                             onMouseUp={stopRecording}
                             onMouseLeave={stopRecording}
-                            className="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center shadow-xl active:scale-90"
+                            className={`w-16 h-16 rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all ${isListening ? 'bg-red-500 animate-pulse' : 'bg-primary text-white'}`}
                         >
                             <Mic size={28} />
                         </button>
                     </div>
+                    <p className="text-center mt-4 text-[9pt] font-black uppercase text-gray-400 tracking-widest">Hold Mic to talk • Text or Voice</p>
                 </div>
 
             </div>
