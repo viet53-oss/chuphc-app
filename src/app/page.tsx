@@ -210,19 +210,24 @@ export default function Dashboard() {
                 <p className="text-[11pt] opacity-70">Your health assistant is ready to help</p>
               </div>
 
-              {/* Voice Input Button - Integrated */}
-              <button
-                onMouseDown={startRecording}
-                onMouseUp={stopRecording}
-                onMouseLeave={stopRecording}
-                onTouchStart={startRecording}
-                onTouchEnd={stopRecording}
-                className={`rounded-2xl shadow-xl flex items-center justify-center transition-all overflow-hidden ${isListening ? 'scale-110 animate-pulse ring-4 ring-red-500' : 'hover:scale-105'}`}
-                style={{ width: '100px', height: '100px', touchAction: 'none' }}
-                title={isListening ? 'Listening...' : 'Hold to speak'}
-              >
-                <img src="/support-icon.png" alt="Hold to speak" className="w-full h-full object-cover" />
-              </button>
+              {/* Voice Input Container */}
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  onMouseDown={startRecording}
+                  onMouseUp={stopRecording}
+                  onMouseLeave={stopRecording}
+                  onTouchStart={startRecording}
+                  onTouchEnd={stopRecording}
+                  className={`rounded-2xl shadow-xl flex items-center justify-center transition-all overflow-hidden ${isListening ? 'scale-110 animate-pulse ring-4 ring-red-500' : 'hover:scale-105'}`}
+                  style={{ width: '100px', height: '100px', touchAction: 'none' }}
+                  title={isListening ? 'Listening...' : 'Hold to speak'}
+                >
+                  <img src="/support-icon.png" alt="Hold to speak" className="w-full h-full object-cover" />
+                </button>
+                <span className="text-[9pt] font-bold uppercase tracking-wider opacity-60">
+                  {isListening ? 'Listening...' : 'Hold to Speak'}
+                </span>
+              </div>
             </div>
           </div>
 
