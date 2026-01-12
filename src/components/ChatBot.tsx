@@ -124,16 +124,7 @@ export default function ChatBot() {
             <div className={`fixed inset-0 z-[200] bg-white flex flex-col overflow-hidden transition-all duration-500 ${isOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
 
                 {/* Header */}
-                <div className="bg-black text-white p-6 flex items-center justify-between shadow-lg">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-2">
-                            <img src="/bot-icon.png" alt="Bot" className="w-full h-full object-contain" />
-                        </div>
-                        <div>
-                            <h3 className="text-[18pt] font-black uppercase tracking-tight">Chu Assistant</h3>
-                            <p className="text-[9pt] font-bold opacity-60 uppercase tracking-widest">Precision Specialist</p>
-                        </div>
-                    </div>
+                <div className="bg-black text-white p-6 flex items-center justify-end shadow-lg">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setIsSpeaking(!isSpeaking)}
