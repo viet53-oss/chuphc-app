@@ -80,17 +80,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* REWARDS (Streamlined Footer) */}
-        <section className="app-section !py-3 flex items-center justify-between bg-black/5 border-2 border-black">
-          <div className="flex items-center gap-4">
-            <Award size={24} className="text-primary" />
-            <div className="flex flex-col">
-              <h4 className="title-md">1,240 Achievement Points</h4>
-              <span className="text-small opacity-50">Tier: Elite Professional</span>
-            </div>
-          </div>
-          <ChevronRight size={20} className="opacity-30" />
-        </section>
 
       </div>
     </ProtectedRoute>
