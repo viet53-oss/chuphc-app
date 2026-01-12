@@ -67,16 +67,14 @@ export default function Dashboard() {
             <Link
               href={p.link}
               key={p.title}
-              className="app-section !p-4 flex flex-col gap-2 hover:bg-black/5 active:scale-95 transition-all"
+              className="app-section !p-4 flex items-center justify-between hover:bg-black/5 active:scale-95 transition-all"
               style={{ borderLeft: `6px solid ${p.color}` }}
             >
               <div className="flex items-center gap-2">
                 <p.icon size={16} style={{ color: p.color }} />
                 <h3 className="title-md">{p.title}</h3>
               </div>
-              <div className="flex justify-end">
-                <span className="text-small font-bold" style={{ color: p.color }}>{p.status}</span>
-              </div>
+              <span className="text-small font-bold" style={{ color: p.color }}>{p.status.toUpperCase()}</span>
             </Link>
           ))}
         </div>
