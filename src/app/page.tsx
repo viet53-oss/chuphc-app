@@ -188,10 +188,10 @@ export default function Dashboard() {
       <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
         <button
           onClick={() => setIsChatOpen(true)}
-          className="bg-primary text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
-          style={{ width: '50px', height: '50px' }}
+          className="rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all overflow-hidden"
+          style={{ width: '60px', height: '60px' }}
         >
-          <img src="/bot-icon.png" alt="Chat" className="w-full h-full object-contain" />
+          <img src="/support-icon.png" alt="Chat" className="w-full h-full object-cover" />
         </button>
       </div>
 
