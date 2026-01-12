@@ -4,201 +4,285 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { Apple, Plus, X } from 'lucide-react';
+import {
+    Camera,
+    Utensils,
+    Coffee,
+    Soup,
+    Apple,
+    Smile,
+    Meh,
+    Frown,
+    Star,
+    Plus,
+    X,
+    Calendar,
+    CloudRain,
+    Zap,
+    Moon
+} from 'lucide-react';
+
+const MEAL_ITEMS = [
+    'Whole Grains', 'Refined Carbs', 'Plant Proteins', 'Red Meat',
+    'Poultry / Fish', 'Eggs', 'Milk / Cheese / Yogurt', 'Plant Milk',
+    'Fat', 'Nuts, Seeds', 'Starchy Veggies (1 to 2 cups)',
+    'Veggies (1 to 2 cups)', 'Veggies (3 to 4 cups)', 'Avocado',
+    'Fruits', 'Creamy Dressings', 'Vegan processed food', 'Sweeteners',
+    'Cookie, Ice Cream, Chips', 'Chocolate', 'Tea, Coffee',
+    'Juice / Sweet Drinks / Sports Drinks', 'Smoothies',
+    'Protein Powder Shake', 'Water', 'Unsweetened Beverage',
+    'Alcohol', 'No Oil Cooking', 'Outside Meal'
+];
+
+const MOODS = [
+    { label: 'Happy', icon: Smile, color: '#10b981' },
+    { label: 'Confident', icon: Zap, color: '#f59e0b' },
+    { label: 'Tired', icon: CloudRain, color: '#64748b' },
+    { label: 'Sleepy', icon: Moon, color: '#8b5cf6' },
+    { label: 'Stressed', icon: Frown, color: '#ef4444' },
+    { label: 'Neutral', icon: Meh, color: '#94a3b8' },
+];
 
 export default function NutritionPage() {
     const { user } = useAuth();
-    const [showForm, setShowForm] = useState(false);
+    const [showForm, setShowForm] = useState(true);
     const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        meal_type: 'breakfast',
-        meal_name: '',
-        calories: '',
-        protein: '',
-        carbs: '',
-        fats: '',
-        notes: '',
-    });
+
+    // Form State
+    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [activeTab, setActiveTab] = useState('Breakfast');
+    const [mealType, setMealType] = useState('Breakfast');
+    const [mood, setMood] = useState('');
+    const [selectedItems, setSelectedItems] = useState<string[]>([]);
+    const [rating, setRating] = useState(0);
+    const [eatingSpeed, setEatingSpeed] = useState('');
+    const [comment, setComment] = useState('');
+
+    const toggleItem = (item: string) => {
+        if (selectedItems.includes(item)) {
+            setSelectedItems(selectedItems.filter(i => i !== item));
+        } else {
+            setSelectedItems([...selectedItems, item]);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user) return;
-
-        setLoading(true);
-        try {
-            const { error } = await supabase.from('nutrition_logs').insert([
-                {
-                    user_id: user.id,
-                    meal_type: formData.meal_type,
-                    meal_name: formData.meal_name,
-                    calories: formData.calories ? parseInt(formData.calories) : null,
-                    protein: formData.protein ? parseFloat(formData.protein) : null,
-                    carbs: formData.carbs ? parseFloat(formData.carbs) : null,
-                    fats: formData.fats ? parseFloat(formData.fats) : null,
-                    notes: formData.notes,
-                },
-            ]);
-
-            if (error) throw error;
-
-            // Reset form
-            setFormData({
-                meal_type: 'breakfast',
-                meal_name: '',
-                calories: '',
-                protein: '',
-                carbs: '',
-                fats: '',
-                notes: '',
-            });
-            setShowForm(false);
-            alert('Meal logged successfully!');
-        } catch (error: any) {
-            alert('Error logging meal: ' + error.message);
-        } finally {
-            setLoading(false);
-        }
+        alert("This feature is currently UI-only. Backend integration coming soon!");
+        // Placeholder for future submission logic
     };
 
     return (
         <ProtectedRoute>
             <div className="flex flex-col gap-3 w-full animate-fade-in pb-20">
-                {/* Header */}
-                <div className="app-section flex items-center justify-between !border-[#10b981] bg-[#10b981]/10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-[#10b981] rounded-lg flex items-center justify-center">
-                            <Apple size={24} className="text-white" />
-                        </div>
-                        <div>
-                            <h2 className="title-md">Nutrition</h2>
-                            <p className="text-small opacity-60">Track your meals</p>
+
+                {/* Header / Tabs */}
+                <div className="bg-white border-b-2 border-black sticky top-[70px] z-40">
+                    <div className="flex items-center justify-between px-4 py-2 bg-gray-100 border-b border-gray-300">
+                        <div className="flex gap-2">
+                            <button className="bg-blue-600 text-white px-3 py-1 rounded text-small font-bold">TRACK</button>
+                            <button className="text-gray-500 px-3 py-1 text-small font-bold">FOOD RX</button>
+                            <button className="text-gray-500 px-3 py-1 text-small font-bold">LOG</button>
                         </div>
                     </div>
-                    <button
-                        onClick={() => setShowForm(!showForm)}
-                        className="p-2 bg-[#10b981] text-white rounded-full hover:bg-[#10b981]/90 active:scale-95 transition-all"
-                    >
-                        {showForm ? <X size={20} /> : <Plus size={20} />}
-                    </button>
+
+                    <div className="p-4 flex justify-center border-b border-gray-200">
+                        <div className="relative">
+                            <input
+                                type="date"
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
+                                className="border border-gray-300 px-3 py-1 rounded font-bold text-center"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-between items-center px-2 overflow-x-auto">
+                        {['Breakfast', 'Lunch', 'Dinner', 'Snack'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`px-4 py-3 font-bold text-sm ${activeTab === tab ? 'border-b-4 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                        <button className="p-2 text-blue-500">
+                            <Plus size={24} />
+                        </button>
+                    </div>
                 </div>
 
-                {/* Log Form */}
-                {showForm && (
-                    <div className="app-section !p-6">
-                        <h3 className="title-md mb-4">Log a Meal</h3>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-body font-bold mb-2">Meal Type</label>
-                                <select
-                                    value={formData.meal_type}
-                                    onChange={(e) => setFormData({ ...formData, meal_type: e.target.value })}
-                                    className="w-full px-4 py-3 border-2 border-black rounded-lg text-body focus:outline-none focus:ring-2 focus:ring-[#10b981]"
+                {/* Main Form Content */}
+                <div className="p-4 bg-white min-h-screen">
+                    <div className="bg-gray-600 text-white p-2 font-bold mb-6">
+                        Record Meal
+                    </div>
+
+                    {/* Picture */}
+                    <div className="mb-8 text-center">
+                        <h3 className="font-bold text-red-500 mb-4">Picture(s)*</h3>
+                        <button className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 hover:bg-gray-100">
+                            <Camera size={40} className="text-blue-400" />
+                        </button>
+                    </div>
+
+                    <hr className="border-gray-300 mb-6" />
+
+                    {/* Meal Type */}
+                    <div className="mb-8 text-center">
+                        <h3 className="font-bold text-red-500 mb-4">Meal Type*</h3>
+                        <div className="flex justify-around">
+                            {[
+                                { name: 'Breakfast', icon: Coffee, color: '#10b981' },
+                                { name: 'Lunch', icon: Soup, color: '#3b82f6' },
+                                { name: 'Dinner', icon: Utensils, color: '#f59e0b' },
+                                { name: 'Snack', icon: Apple, color: '#ef4444' }
+                            ].map((type) => (
+                                <button
+                                    key={type.name}
+                                    onClick={() => setMealType(type.name)}
+                                    className={`flex flex-col items-center gap-2 p-2 rounded-lg transition-all ${mealType === type.name ? 'scale-110' : 'opacity-60'}`}
                                 >
-                                    <option value="breakfast">Breakfast</option>
-                                    <option value="lunch">Lunch</option>
-                                    <option value="dinner">Dinner</option>
-                                    <option value="snack">Snack</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-body font-bold mb-2">Meal Name</label>
-                                <input
-                                    type="text"
-                                    value={formData.meal_name}
-                                    onChange={(e) => setFormData({ ...formData, meal_name: e.target.value })}
-                                    placeholder="e.g., Grilled Chicken Salad"
-                                    className="w-full px-4 py-3 border-2 border-black rounded-lg text-body focus:outline-none focus:ring-2 focus:ring-[#10b981]"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-body font-bold mb-2">Calories</label>
-                                    <input
-                                        type="number"
-                                        value={formData.calories}
-                                        onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
-                                        placeholder="350"
-                                        className="w-full px-4 py-3 border-2 border-black rounded-lg text-body focus:outline-none focus:ring-2 focus:ring-[#10b981]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-body font-bold mb-2">Protein (g)</label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        value={formData.protein}
-                                        onChange={(e) => setFormData({ ...formData, protein: e.target.value })}
-                                        placeholder="25"
-                                        className="w-full px-4 py-3 border-2 border-black rounded-lg text-body focus:outline-none focus:ring-2 focus:ring-[#10b981]"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-body font-bold mb-2">Carbs (g)</label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        value={formData.carbs}
-                                        onChange={(e) => setFormData({ ...formData, carbs: e.target.value })}
-                                        placeholder="30"
-                                        className="w-full px-4 py-3 border-2 border-black rounded-lg text-body focus:outline-none focus:ring-2 focus:ring-[#10b981]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-body font-bold mb-2">Fats (g)</label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        value={formData.fats}
-                                        onChange={(e) => setFormData({ ...formData, fats: e.target.value })}
-                                        placeholder="15"
-                                        className="w-full px-4 py-3 border-2 border-black rounded-lg text-body focus:outline-none focus:ring-2 focus:ring-[#10b981]"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-body font-bold mb-2">Notes (Optional)</label>
-                                <textarea
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    placeholder="Any additional notes..."
-                                    rows={3}
-                                    className="w-full px-4 py-3 border-2 border-black rounded-lg text-body focus:outline-none focus:ring-2 focus:ring-[#10b981]"
-                                />
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-[#10b981] text-white py-3 rounded-lg font-bold text-body hover:bg-[#10b981]/90 active:scale-95 transition-all disabled:opacity-50"
-                            >
-                                {loading ? 'Logging...' : 'Log Meal'}
-                            </button>
-                        </form>
-                    </div>
-                )}
-
-                {/* Info Card */}
-                <div className="app-section !p-6 bg-[#10b981]/5">
-                    <h3 className="title-md mb-2">Track Your Nutrition</h3>
-                    <p className="text-body opacity-60 mb-4">
-                        Log your meals to monitor your calorie intake and macronutrient balance. Consistent tracking helps you make informed decisions about your diet.
-                    </p>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="p-3 bg-white rounded-lg border-2 border-black">
-                            <p className="text-small opacity-60">Today's Calories</p>
-                            <p className="title-md text-[#10b981]">0</p>
-                        </div>
-                        <div className="p-3 bg-white rounded-lg border-2 border-black">
-                            <p className="text-small opacity-60">Meals Logged</p>
-                            <p className="title-md text-[#10b981]">0</p>
+                                    <type.icon size={32} style={{ color: type.color }} />
+                                    <span className="text-xs font-bold">{type.name}</span>
+                                </button>
+                            ))}
                         </div>
                     </div>
+
+                    <hr className="border-gray-300 mb-6" />
+
+                    {/* Mood */}
+                    <div className="mb-8 text-center">
+                        <h3 className="font-bold text-red-500 mb-4">Mood*</h3>
+                        <div className="flex justify-around flex-wrap gap-4">
+                            {MOODS.map((m) => (
+                                <button
+                                    key={m.label}
+                                    onClick={() => setMood(m.label)}
+                                    className={`flex flex-col items-center gap-2 transition-all ${mood === m.label ? 'scale-110 font-bold' : 'opacity-60'}`}
+                                >
+                                    <m.icon size={32} style={{ color: m.color }} />
+                                    <span className="text-xs">{m.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <hr className="border-gray-300 mb-6" />
+
+                    {/* Your Meal Had */}
+                    <div className="mb-8">
+                        <h3 className="font-bold text-red-500 mb-4 text-center">Your meal had*</h3>
+                        <p className="text-center text-xs text-gray-400 mb-4">Click all that apply</p>
+
+                        <div className="grid grid-cols-[1fr_auto_1fr] gap-4">
+                            <div className="text-right">
+                                <h4 className="font-bold text-sm mb-4">Meal didn't have</h4>
+                                <div className="flex flex-col items-end gap-2">
+                                    {MEAL_ITEMS.map((item) => (
+                                        <button
+                                            key={item}
+                                            onClick={() => toggleItem(item)}
+                                            className={`text-xs px-2 py-1 border border-gray-300 rounded-md transition-all ${selectedItems.includes(item) ? 'opacity-0 pointer-events-none' : 'bg-white hover:bg-gray-50'}`}
+                                        >
+                                            {item}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2 pt-10">
+                                {MEAL_ITEMS.map((item) => (
+                                    <div key={item} className="h-[26px] flex items-center">
+                                        <div className={`w-4 h-4 rounded-full ${selectedItems.includes(item) ? 'bg-blue-500' : 'bg-cyan-400'}`}></div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="text-left">
+                                <h4 className="font-bold text-sm mb-4">Meal had</h4>
+                                <div className="flex flex-col items-start gap-2">
+                                    {MEAL_ITEMS.map((item) => (
+                                        <button
+                                            key={item}
+                                            onClick={() => toggleItem(item)}
+                                            className={`text-xs px-2 py-1 font-bold text-blue-600 transition-all ${selectedItems.includes(item) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                                        >
+                                            {item}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr className="border-gray-300 mb-6" />
+
+                    {/* Meal Rating */}
+                    <div className="mb-8 text-center">
+                        <h3 className="font-bold text-red-500 mb-4">Meal Rating*</h3>
+                        <div className="flex justify-center gap-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <button key={star} onClick={() => setRating(star)}>
+                                    <Star
+                                        size={32}
+                                        fill={rating >= star ? "#64748b" : "none"}
+                                        className={rating >= star ? "text-gray-500" : "text-gray-300"}
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <hr className="border-gray-300 mb-6" />
+
+                    {/* Meal Eating Speed */}
+                    <div className="mb-8 text-center">
+                        <h3 className="font-bold text-red-500 mb-4">Meal Eating Speed*</h3>
+                        <div className="flex justify-center gap-6">
+                            {['5 minutes', '10 minutes', '20 minutes'].map((speed) => (
+                                <label key={speed} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="eating_speed"
+                                        checked={eatingSpeed === speed}
+                                        onChange={() => setEatingSpeed(speed)}
+                                        className="w-4 h-4 text-blue-600"
+                                    />
+                                    <span className="text-sm font-medium">{speed}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <hr className="border-gray-300 mb-6" />
+
+                    {/* Comment */}
+                    <div className="mb-8 text-center">
+                        <h3 className="font-bold text-black mb-4">Comment</h3>
+                        <textarea
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            placeholder="comments about your meal"
+                            className="w-full border-b border-gray-300 p-2 focus:outline-none focus:border-blue-500 text-sm"
+                            rows={3}
+                        />
+                    </div>
+
+                    <hr className="border-gray-300 mb-6" />
+
+                    {/* Buttons */}
+                    <div className="flex justify-center gap-4 pb-10">
+                        <button className="px-8 py-2 bg-blue-600 text-white font-bold rounded shadow-md hover:bg-blue-700">
+                            Add
+                        </button>
+                        <button className="px-8 py-2 bg-gray-500 text-white font-bold rounded shadow-md hover:bg-gray-600">
+                            Cancel
+                        </button>
+                    </div>
+
                 </div>
             </div>
         </ProtectedRoute>
