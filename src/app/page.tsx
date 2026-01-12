@@ -35,10 +35,7 @@ export default function Dashboard() {
 
         {/* HEADER: Score & Brand (Balanced) */}
         <section className={`app-section !border-black bg-primary-tint !py-4 dashboard-header`}>
-          {/* Logo */}
-          <div style={{ maxWidth: '120px', width: '100%', height: 'auto', flexShrink: 0 }}>
-            <img src="/logo.png" alt="Chu Logo" className="w-full h-full object-contain" />
-          </div>
+
 
           {/* Precision Score (One Line) */}
           <div className="flex items-center gap-2">
