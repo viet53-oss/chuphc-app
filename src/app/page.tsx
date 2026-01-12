@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import {
   Apple,
   Dumbbell,
@@ -28,7 +30,10 @@ const PILLARS = [
   { title: 'Rewards', icon: Award, color: '#10b981', link: '/rewards', status: 'Earned' },
 ];
 
+
 export default function Dashboard() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   return (
     <ProtectedRoute>
       <div className="flex flex-col gap-3 w-full animate-fade-in">
@@ -85,10 +90,41 @@ export default function Dashboard() {
 
       {/* Chat Bot Button - Fixed to viewport for true centering */}
       <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
-        <button className="bg-primary text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all" style={{ width: '50px', height: '50px' }}>
+        <button
+          onClick={() => setIsChatOpen(true)}
+          className="bg-primary text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+          style={{ width: '50px', height: '50px' }}
+        >
           <img src="/bot-icon.png" alt="Chat" className="w-full h-full object-contain" />
         </button>
       </div>
+
+      {/* Fullscreen Chat Popup */}
+      {isChatOpen && (
+        <div className="fixed inset-0 z-[100] bg-white flex flex-col">
+          {/* Chat Content Area */}
+          <div className="flex-1 p-8 overflow-y-auto">
+            <h1 className="text-[24pt] font-black text-center mb-8">Chat Assistant</h1>
+            {/* Chat messages will go here */}
+          </div>
+
+          {/* Close Buttons - Bottom Left and Right */}
+          <div className="p-6 flex justify-between">
+            <button
+              onClick={() => setIsChatOpen(false)}
+              className="btn-logout"
+            >
+              CLOSE
+            </button>
+            <button
+              onClick={() => setIsChatOpen(false)}
+              className="btn-logout"
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      )}
     </ProtectedRoute>
   );
 }
