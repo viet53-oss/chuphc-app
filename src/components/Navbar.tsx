@@ -1,13 +1,12 @@
 'use client';
 
 import { User } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Navbar({ customTitle }: { customTitle?: string }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAdmin, setIsAdmin } = useAuth();
 
   const getPageTitle = () => {
     if (customTitle) return customTitle;
@@ -23,11 +22,17 @@ export default function Navbar({ customTitle }: { customTitle?: string }) {
   const isAuthPage = pathname === '/login' || pathname === '/signup';
 
   const handleAdminClick = () => {
-    const password = prompt('Enter Admin Password:');
-    if (password === 'ujs') {
-      router.push('/admin');
-    } else if (password !== null) {
-      alert('Incorrect password');
+    if (isAdmin) {
+      // If already admin, simply exit admin mode
+      setIsAdmin(false);
+    } else {
+      // If not admin, prompt for password
+      const password = prompt('Enter Admin Password:');
+      if (password === 'ujs') {
+        setIsAdmin(true);
+      } else if (password !== null) {
+        alert('Incorrect password');
+      }
     }
   };
 
@@ -40,13 +45,25 @@ export default function Navbar({ customTitle }: { customTitle?: string }) {
 
       {user && !isAuthPage && (
         <div className="navbar-actions">
-          {/* Email display removed as requested */}
+          {isAdmin && (
+            <span style={{
+              color: '#d32f2f',
+              fontWeight: 'bold',
+              marginRight: '12px',
+              fontSize: '10pt',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Admin Mode
+            </span>
+          )}
           <button
             onClick={handleAdminClick}
             className="btn-logout"
-            title="Admin Access"
+            title={isAdmin ? "Exit Admin Mode" : "Enter Admin Mode"}
+            style={isAdmin ? { backgroundColor: '#d32f2f', color: 'white' } : {}}
           >
-            Admin
+            {isAdmin ? 'Exit Admin' : 'Admin'}
           </button>
         </div>
       )}

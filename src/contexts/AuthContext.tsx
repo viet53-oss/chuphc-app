@@ -9,12 +9,16 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     signOut: () => Promise<void>;
+    isAdmin: boolean;
+    setIsAdmin: (value: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
     loading: true,
     signOut: async () => { },
+    isAdmin: false,
+    setIsAdmin: () => { },
 });
 
 export const useAuth = () => {
@@ -28,6 +32,7 @@ export const useAuth = () => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -48,11 +53,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const handleSignOut = async () => {
         await auth.signOut();
+        setIsAdmin(false); // Reset admin mode on logout
         router.push('/login');
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signOut: handleSignOut }}>
+        <AuthContext.Provider value={{ user, loading, signOut: handleSignOut, isAdmin, setIsAdmin }}>
             {children}
         </AuthContext.Provider>
     );
