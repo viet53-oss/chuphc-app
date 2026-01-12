@@ -10,13 +10,7 @@ import {
   Zap,
   Moon,
   Users,
-  ShieldAlert,
-  ChevronRight,
-  TrendingUp,
-  Award,
-  Target,
-  BookOpen,
-  Gift
+  ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -28,9 +22,7 @@ const PILLARS = [
   { title: 'Stress', icon: Zap, color: '#14b8a6', link: '/stress', status: 'Check' },
   { title: 'Sleep', icon: Moon, color: '#3b82f6', link: '/sleep', status: 'Good' },
   { title: 'Social', icon: Users, color: '#ef4444', link: '/social', status: 'Active' },
-  { title: 'Risky', icon: ShieldAlert, color: '#f97316', link: '/risky', status: 'Safe' },
-  { title: 'Education', icon: BookOpen, color: '#3b82f6', link: '/education', status: 'New' },
-  { title: 'Rewards', icon: Award, color: '#10b981', link: '/rewards', status: 'Earned' },
+  { title: 'Risky', icon: ShieldAlert, color: '#f97316', link: '/risky', status: 'Safe' }
 ];
 
 
