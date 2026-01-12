@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, User, Sparkles } from 'lucide-react';
+import { DIET_BIBLE } from '@/lib/diet-knowledge';
 
 export default function ChatBot() {
     const [isOpen, setIsOpen] = useState(false);
@@ -22,16 +23,32 @@ export default function ChatBot() {
 
         const userMsg = { role: 'user', content: input };
         setMessages(prev => [...prev, userMsg]);
+        const currentInput = input.toLowerCase();
         setInput('');
+
+        // Find relevant diet answer
+        let botResponse = DIET_BIBLE.default;
+
+        for (const faq of DIET_BIBLE.faqs) {
+            if (faq.keywords.some(keyword => currentInput.includes(keyword))) {
+                botResponse = faq.answer;
+                break;
+            }
+        }
+
+        // Handle generic "rules" or "bible" request
+        if (currentInput.includes('rule') || currentInput.includes('bible') || currentInput.includes('guide')) {
+            botResponse = "Here are our core metabolic rules:\n\n" + DIET_BIBLE.principles.join("\n\n");
+        }
 
         // Simulate bot response
         setTimeout(() => {
             const botMsg = {
                 role: 'bot',
-                content: `Thank you for your question about "${input}". Our clinical team suggests reviewing your recent logs for personalized insights.`
+                content: botResponse
             };
             setMessages(prev => [...prev, botMsg]);
-        }, 1000);
+        }, 800);
     };
 
     return (
@@ -79,7 +96,7 @@ export default function ChatBot() {
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}>
                                 <div className={`max-w-[85%] p-4 rounded-2xl flex gap-3 ${msg.role === 'user' ? 'bg-black text-white rounded-tr-none' : 'bg-white border border-gray-100 shadow-sm rounded-tl-none'}`}>
                                     {msg.role === 'bot' && <Sparkles size={16} className="text-primary mt-1 shrink-0" />}
-                                    <p className="text-[11pt] font-bold leading-relaxed">{msg.content}</p>
+                                    <p className="text-[11pt] font-bold leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                                 </div>
                             </div>
                         ))}
