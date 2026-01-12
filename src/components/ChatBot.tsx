@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Mic, Volume2, VolumeX } from 'lucide-react';
+import { X, Mic, Volume2, VolumeX, MessageCircle } from 'lucide-react';
 import { DIET_BIBLE } from '@/lib/diet-knowledge';
 import { usePathname } from 'next/navigation';
 
@@ -106,14 +106,9 @@ export default function ChatBot() {
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
                     <button
                         onClick={() => setIsOpen(true)}
-                        className="transform transition-all hover:scale-110 active:scale-95"
-                        style={{ width: '20px', height: '20px' }}
+                        className="w-16 h-16 bg-black rounded-full flex items-center justify-center shadow-lg transform transition-all hover:scale-110 active:scale-95"
                     >
-                        <img
-                            src="/bot-icon.png"
-                            alt="Chu Assistant"
-                            className="w-full h-full object-contain"
-                        />
+                        <MessageCircle size={32} className="text-white" />
                     </button>
                 </div>
             )}

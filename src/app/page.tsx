@@ -134,23 +134,40 @@ export default function Dashboard() {
     <ProtectedRoute>
       <div className="flex flex-col gap-3 w-full animate-fade-in">
 
-        {/* HEADER: Score & Brand (Balanced) */}
-        <section className={`app-section !border-black bg-primary-tint !py-4 dashboard-header`}>
-          <img src="/logo.png" alt="Chu Precision Health" style={{ width: '150px' }} className="mb-2" />
+        {/* HEADER: Score & Brand (Centered) */}
+        {/* HEADER: Score & Brand (Centered Stack: Text Top, Logo Bottom) */}
+        <section className="app-section !border-black bg-primary-tint !py-4 dashboard-header flex flex-row items-center justify-between relative min-h-[160px]">
 
+          {/* Spacer to balance flex layout (since Logo moved to center) */}
+          <div className="w-[100px]"></div>
 
-          {/* Precision Score (One Line) */}
-          <div className="flex items-center gap-2">
-            <span className="uppercase font-bold tracking-wider" style={{ fontSize: '20pt', color: '#000000' }}>PRECISION SCORE:</span>
-            <div className="flex items-baseline gap-1">
-              <span className="font-bold" style={{ fontSize: '20pt', color: '#000000' }}>84/100</span>
+          {/* CENTER: Brand Text & Logo (Absolutely Centered) */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 w-full flex flex-col items-center gap-2">
+            <h1 className="font-bold tracking-tight leading-none whitespace-nowrap" style={{ fontSize: '30pt', color: '#1F363D' }}>
+              Chu Precision Health Center
+            </h1>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden flex items-center justify-center" style={{ width: '100px', height: '100px' }}>
+              <img
+                src="/logo.png"
+                alt="Chu Precision Health"
+                className="w-full h-full object-contain"
+              />
             </div>
           </div>
 
-          {/* Weekly Status (One Line) */}
-          <div className="flex items-center gap-2">
-            <span className="uppercase font-bold tracking-wider" style={{ fontSize: '20pt', color: '#000000' }}>WEEKLY STATUS:</span>
-            <p className="font-bold" style={{ fontSize: '20pt', color: '#000000' }}>On Target</p>
+          {/* RIGHT: Stats */}
+          <div className="flex flex-col items-end gap-1 z-10">
+            {/* Precision Score */}
+            <div className="flex items-center gap-2">
+              <span className="uppercase font-bold tracking-wider text-right" style={{ fontSize: '14pt', color: '#000000' }}>PRECISION SCORE:</span>
+              <span className="font-bold" style={{ fontSize: '14pt', color: '#000000' }}>84/100</span>
+            </div>
+
+            {/* Weekly Status */}
+            <div className="flex items-center gap-2">
+              <span className="uppercase font-bold tracking-wider text-right" style={{ fontSize: '14pt', color: '#000000' }}>WEEKLY STATUS:</span>
+              <p className="font-bold" style={{ fontSize: '14pt', color: '#000000' }}>On Target</p>
+            </div>
           </div>
         </section>
 
@@ -179,12 +196,10 @@ export default function Dashboard() {
               <span className="text-small font-bold" style={{ color: p.color }}>{p.status.toUpperCase()}</span>
             </Link>
           ))}
-
         </div>
-
       </div>
 
-      {/* Chat Bot Button - Fixed to viewport for true centering */}
+      {/* Chat Bot Button - Fixed Position */}
       <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
         <button
           onClick={() => setIsChatOpen(true)}
@@ -198,10 +213,9 @@ export default function Dashboard() {
       {/* Fullscreen Chat Popup */}
       {isChatOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 200, backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
-          {/* Use same header as other pages */}
           <Navbar customTitle="Chat Conversation" />
 
-          {/* Chat Summary Section with Mic */}
+          {/* Chat Summary Section */}
           <div className="app-section !border-black bg-primary-tint p-1 m-1">
             <div className="flex items-center justify-between">
               <div className="flex flex-col gap-1">
@@ -220,7 +234,6 @@ export default function Dashboard() {
                   onTouchEnd={stopRecording}
                   className={`rounded-2xl shadow-xl flex items-center justify-center transition-all overflow-hidden ${isListening ? 'scale-110 animate-pulse ring-4 ring-red-500' : 'hover:scale-105'}`}
                   style={{ width: '100px', height: '100px', touchAction: 'none' }}
-                  title={isListening ? 'Listening...' : 'Hold to speak'}
                 >
                   <img src="/support-icon.png" alt="Hold to speak" className="w-full h-full object-cover" />
                 </button>
@@ -251,20 +264,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Close Buttons - Fixed at Bottom */}
+          {/* Close Buttons */}
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px', display: 'flex', justifyContent: 'space-between', backgroundColor: 'white', borderTop: '2px solid #e5e7eb' }}>
-            <button
-              onClick={() => setIsChatOpen(false)}
-              className="btn-logout"
-            >
-              CLOSE
-            </button>
-            <button
-              onClick={() => setIsChatOpen(false)}
-              className="btn-logout"
-            >
-              CLOSE
-            </button>
+            <button onClick={() => setIsChatOpen(false)} className="btn-logout">CLOSE</button>
+            <button onClick={() => setIsChatOpen(false)} className="btn-logout">CLOSE</button>
           </div>
         </div>
       )}
