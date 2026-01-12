@@ -101,7 +101,7 @@ export default function Dashboard() {
 
       {/* Fullscreen Chat Popup */}
       {isChatOpen && (
-        <div className="fixed inset-0 z-[100] bg-white flex flex-col">
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 200, backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
           {/* Chat Content Area */}
           <div className="flex-1 p-8 overflow-y-auto">
             <h1 className="text-[24pt] font-black text-center mb-8">Chat Assistant</h1>
