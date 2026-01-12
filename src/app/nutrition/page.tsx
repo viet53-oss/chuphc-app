@@ -132,7 +132,7 @@ export default function NutritionPage() {
                     {/* Meal Type */}
                     <div className="mb-8 text-center">
                         <h3 className="font-bold text-red-500 mb-4">Meal Type*</h3>
-                        <div className="flex justify-around">
+                        <div className="grid grid-cols-4 gap-2">
                             {[
                                 { name: 'Breakfast', icon: Coffee, color: '#10b981' },
                                 { name: 'Lunch', icon: Soup, color: '#3b82f6' },
@@ -142,10 +142,10 @@ export default function NutritionPage() {
                                 <button
                                     key={type.name}
                                     onClick={() => setMealType(type.name)}
-                                    className={`flex flex-col items-center gap-2 p-2 rounded-lg transition-all ${mealType === type.name ? 'scale-110' : 'opacity-60'}`}
+                                    className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${mealType === type.name ? 'bg-gray-100 ring-2 ring-blue-500' : 'opacity-70'}`}
                                 >
-                                    <type.icon size={32} style={{ color: type.color }} />
-                                    <span className="text-xs font-bold">{type.name}</span>
+                                    <type.icon size={28} style={{ color: type.color }} />
+                                    <span className="text-[10pt] font-bold">{type.name}</span>
                                 </button>
                             ))}
                         </div>
@@ -156,15 +156,15 @@ export default function NutritionPage() {
                     {/* Mood */}
                     <div className="mb-8 text-center">
                         <h3 className="font-bold text-red-500 mb-4">Mood*</h3>
-                        <div className="flex justify-around flex-wrap gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                             {MOODS.map((m) => (
                                 <button
                                     key={m.label}
                                     onClick={() => setMood(m.label)}
-                                    className={`flex flex-col items-center gap-2 transition-all ${mood === m.label ? 'scale-110 font-bold' : 'opacity-60'}`}
+                                    className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${mood === m.label ? 'bg-gray-100 ring-2 ring-blue-500' : 'opacity-70'}`}
                                 >
-                                    <m.icon size={32} style={{ color: m.color }} />
-                                    <span className="text-xs">{m.label}</span>
+                                    <m.icon size={28} style={{ color: m.color }} />
+                                    <span className="text-[10pt] font-bold">{m.label}</span>
                                 </button>
                             ))}
                         </div>
@@ -173,48 +173,23 @@ export default function NutritionPage() {
                     <hr className="border-gray-300 mb-6" />
 
                     {/* Your Meal Had */}
-                    <div className="mb-8">
-                        <h3 className="font-bold text-red-500 mb-4 text-center">Your meal had*</h3>
-                        <p className="text-center text-xs text-gray-400 mb-4">Click all that apply</p>
+                    <div className="mb-8 text-center">
+                        <h3 className="font-bold text-red-500 mb-2">Your meal had*</h3>
+                        <p className="text-xs text-gray-400 mb-4">Tap to select all that apply</p>
 
-                        <div className="grid grid-cols-[1fr_auto_1fr] gap-4">
-                            <div className="text-right">
-                                <h4 className="font-bold text-sm mb-4">Meal didn't have</h4>
-                                <div className="flex flex-col items-end gap-2">
-                                    {MEAL_ITEMS.map((item) => (
-                                        <button
-                                            key={item}
-                                            onClick={() => toggleItem(item)}
-                                            className={`text-xs px-2 py-1 border border-gray-300 rounded-md transition-all ${selectedItems.includes(item) ? 'opacity-0 pointer-events-none' : 'bg-white hover:bg-gray-50'}`}
-                                        >
-                                            {item}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col items-center gap-2 pt-10">
-                                {MEAL_ITEMS.map((item) => (
-                                    <div key={item} className="h-[26px] flex items-center">
-                                        <div className={`w-4 h-4 rounded-full ${selectedItems.includes(item) ? 'bg-blue-500' : 'bg-cyan-400'}`}></div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="text-left">
-                                <h4 className="font-bold text-sm mb-4">Meal had</h4>
-                                <div className="flex flex-col items-start gap-2">
-                                    {MEAL_ITEMS.map((item) => (
-                                        <button
-                                            key={item}
-                                            onClick={() => toggleItem(item)}
-                                            className={`text-xs px-2 py-1 font-bold text-blue-600 transition-all ${selectedItems.includes(item) ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                                        >
-                                            {item}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                        <div className="flex flex-wrap gap-2 justify-center">
+                            {MEAL_ITEMS.map((item) => (
+                                <button
+                                    key={item}
+                                    onClick={() => toggleItem(item)}
+                                    className={`px-3 py-2 rounded-full text-xs font-bold border transition-all ${selectedItems.includes(item)
+                                            ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                                            : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    {item}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -225,9 +200,9 @@ export default function NutritionPage() {
                         <h3 className="font-bold text-red-500 mb-4">Meal Rating*</h3>
                         <div className="flex justify-center gap-2">
                             {[1, 2, 3, 4, 5].map((star) => (
-                                <button key={star} onClick={() => setRating(star)}>
+                                <button key={star} onClick={() => setRating(star)} className="p-2">
                                     <Star
-                                        size={32}
+                                        size={36}
                                         fill={rating >= star ? "#64748b" : "none"}
                                         className={rating >= star ? "text-gray-500" : "text-gray-300"}
                                     />
@@ -241,9 +216,10 @@ export default function NutritionPage() {
                     {/* Meal Eating Speed */}
                     <div className="mb-8 text-center">
                         <h3 className="font-bold text-red-500 mb-4">Meal Eating Speed*</h3>
-                        <div className="flex justify-center gap-6">
+                        <div className="flex flex-col gap-3 max-w-[200px] mx-auto">
                             {['5 minutes', '10 minutes', '20 minutes'].map((speed) => (
-                                <label key={speed} className="flex items-center gap-2 cursor-pointer">
+                                <label key={speed} className={`flex items-center justify-between px-4 py-2 rounded-lg border cursor-pointer ${eatingSpeed === speed ? 'bg-blue-50 border-blue-500' : 'border-gray-200'}`}>
+                                    <span className="text-sm font-bold text-gray-700">{speed}</span>
                                     <input
                                         type="radio"
                                         name="eating_speed"
@@ -251,7 +227,6 @@ export default function NutritionPage() {
                                         onChange={() => setEatingSpeed(speed)}
                                         className="w-4 h-4 text-blue-600"
                                     />
-                                    <span className="text-sm font-medium">{speed}</span>
                                 </label>
                             ))}
                         </div>
