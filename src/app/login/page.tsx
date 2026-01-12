@@ -35,7 +35,8 @@ export default function LoginPage() {
                     <img
                         src="/logo.png"
                         alt="Chu Precision Health Center"
-                        className="w-32 h-32 mx-auto mb-4"
+                        className="mx-auto mb-4"
+                        style={{ width: '150px', height: 'auto' }}
                     />
                     <h1 className="title-xl mb-2">Welcome Back</h1>
                     <p className="text-body opacity-60">Sign in to your health dashboard</p>
