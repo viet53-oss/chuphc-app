@@ -102,14 +102,41 @@ export default function Dashboard() {
       {/* Fullscreen Chat Popup */}
       {isChatOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 200, backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
-          {/* Chat Content Area */}
-          <div className="flex-1 p-8 overflow-y-auto">
-            <h1 className="text-[24pt] font-black text-center mb-8">Chat Assistant</h1>
-            {/* Chat messages will go here */}
+          {/* Chat Header */}
+          <div style={{ padding: '24px', borderBottom: '2px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
+            <h1 className="text-[20pt] font-black text-center">Chat Assistant</h1>
+          </div>
+
+          {/* Chat Messages Area */}
+          <div className="flex-1 p-6 overflow-y-auto" style={{ backgroundColor: '#f9fafb' }}>
+            <div className="max-w-3xl mx-auto space-y-4">
+              {/* Welcome message */}
+              <div className="flex justify-start">
+                <div className="bg-white p-4 rounded-2xl shadow-sm border-2 border-gray-100 max-w-[80%]">
+                  <p className="text-[13pt] font-bold">Hello! I'm your Chu Health Assistant. Ask me anything about your health!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Voice Input Section */}
+          <div style={{ padding: '24px', borderTop: '2px solid #e5e7eb', backgroundColor: 'white' }}>
+            <div className="max-w-3xl mx-auto flex flex-col items-center gap-4">
+              <button
+                className="w-20 h-20 bg-primary text-white rounded-full shadow-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" x2="12" y1="19" y2="22" />
+                </svg>
+              </button>
+              <p className="text-[10pt] font-bold text-gray-500 uppercase tracking-widest">Hold to speak</p>
+            </div>
           </div>
 
           {/* Close Buttons - Fixed at Bottom */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px', display: 'flex', justifyContent: 'space-between', backgroundColor: 'white' }}>
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px', display: 'flex', justifyContent: 'space-between', backgroundColor: 'white', borderTop: '2px solid #e5e7eb' }}>
             <button
               onClick={() => setIsChatOpen(false)}
               className="btn-logout"
