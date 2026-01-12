@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 import {
   Apple,
@@ -34,6 +36,45 @@ const PILLARS = [
 
 export default function Dashboard() {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{ role: string; content: string; created_at?: string }>>([
+    { role: 'bot', content: "Hello! I'm your Chu Health Assistant. Ask me anything about your health!" }
+  ]);
+  const { user } = useAuth();
+
+  // Load chat messages from Supabase
+  useEffect(() => {
+    if (user && isChatOpen) {
+      loadChatMessages();
+    }
+  }, [user, isChatOpen]);
+
+  const loadChatMessages = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true });
+
+    if (data && data.length > 0) {
+      setChatMessages(data.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        created_at: msg.created_at
+      })));
+    }
+  };
+
+  const saveChatMessage = async (role: string, content: string) => {
+    if (!user) return;
+
+    await supabase.from('chat_messages').insert([{
+      user_id: user.id,
+      role,
+      content
+    }]);
+  };
 
   return (
     <ProtectedRoute>
@@ -109,12 +150,13 @@ export default function Dashboard() {
           {/* Chat Messages Area */}
           <div className="flex-1 p-6 overflow-y-auto" style={{ backgroundColor: '#f9fafb' }}>
             <div className="max-w-3xl mx-auto space-y-4">
-              {/* Welcome message */}
-              <div className="flex justify-start">
-                <div className="bg-white p-4 rounded-2xl shadow-sm border-2 border-gray-100 max-w-[80%]">
-                  <p className="text-[13pt] font-bold">Hello! I'm your Chu Health Assistant. Ask me anything about your health!</p>
+              {chatMessages.map((msg, index) => (
+                <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`p-4 rounded-2xl shadow-sm border-2 max-w-[80%] ${msg.role === 'user' ? 'bg-primary text-white border-primary' : 'bg-white border-gray-100'}`}>
+                    <p className="text-[13pt] font-bold">{msg.content}</p>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
 
