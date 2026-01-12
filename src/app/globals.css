@@ -1,42 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap');
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #2D5A27;
+  --secondary: #1F363D;
+  --accent: #D4AF37;
+  --bg-app: #ffffff;
+  --text-main: #1F363D;
+  --text-muted: #64748b;
+  --border-width: 1px;
+  --radius-lg: 16px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Standardized Font Size: 14pt (approx. 18.66px) */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  font-size: 15pt;
+  /* Global font size requirement: 15pt */
 }
 
 html,
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  width: 100%;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+h1,
+h2,
+h3,
+h4,
+b,
+strong {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 15pt;
+  /* Heading size standardization: 15pt */
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+/* SECTION SYSTEM */
+.app-section {
+  width: 100%;
+  padding: 16px;
+  border: var(--border-width) solid #000000;
+  border-radius: var(--radius-lg);
+  background-color: #ffffff;
+}
+
+/* Overriding specific utility classes to respect the 14pt rule */
+.title-xl,
+.title-lg,
+.title-md,
+.text-body,
+.text-small {
+  font-size: 15pt !important;
+}
+
+.text-small {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+/* LAYOUT SHELL */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* UTILITIES */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.bg-primary-tint {
+  background-color: rgba(45, 90, 39, 0.04);
+}
+
+.border-primary {
+  border-color: var(--primary);
+  border-width: 2px;
+}
+
+.text-primary {
+  color: var(--primary);
+}
+
+.pillar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 a {
-  color: inherit;
   text-decoration: none;
+  color: inherit;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
