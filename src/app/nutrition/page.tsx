@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -412,7 +413,17 @@ export default function NutritionPage() {
                     </div>
                 )}
 
+                {/* Bottom Navigation Buttons */}
+                <div className="flex justify-between px-2 mt-8 mb-10">
+                    <Link href="/" className="btn-logout">
+                        HOME
+                    </Link>
+                    <Link href="/" className="btn-logout">
+                        HOME
+                    </Link>
+                </div>
+
             </div>
-        </ProtectedRoute>
+        </ProtectedRoute >
     );
 }
