@@ -201,12 +201,32 @@ export default function Dashboard() {
           {/* Use same header as other pages */}
           <Navbar customTitle="Chat Conversation" />
 
-          {/* Chat Summary Section */}
-          <div className="app-section !border-black bg-primary-tint !py-4 mx-1 mt-3">
-            <h3 className="text-[16pt] font-black uppercase mb-2">💬 Chat Summary</h3>
-            <div className="flex flex-col gap-1">
-              <p className="text-[13pt] font-bold">Total Messages: {chatMessages.length}</p>
-              <p className="text-[11pt] opacity-70">Your health assistant is ready to help</p>
+          {/* Chat Summary Section with Mic */}
+          <div className="app-section !border-black bg-primary-tint p-1 m-1">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-1">
+                <h3 className="text-[16pt] font-black uppercase">💬 Chat Summary</h3>
+                <p className="text-[13pt] font-bold">Total Messages: {chatMessages.length}</p>
+                <p className="text-[11pt] opacity-70">Your health assistant is ready to help</p>
+              </div>
+
+              {/* Voice Input Button - Integrated */}
+              <button
+                onMouseDown={startRecording}
+                onMouseUp={stopRecording}
+                onMouseLeave={stopRecording}
+                onTouchStart={startRecording}
+                onTouchEnd={stopRecording}
+                className={`w-20 h-20 rounded-full shadow-xl flex items-center justify-center transition-all ${isListening ? 'bg-red-500 scale-110 animate-pulse' : 'bg-primary hover:scale-105'}`}
+                style={{ touchAction: 'none' }}
+                title={isListening ? 'Listening...' : 'Hold to speak'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" x2="12" y1="19" y2="22" />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -228,26 +248,6 @@ export default function Dashboard() {
                 </section>
               ))}
             </div>
-          </div>
-
-          {/* Voice Input Button - Top Right */}
-          <div style={{ position: 'fixed', top: '100px', right: '24px', zIndex: 300 }}>
-            <button
-              onMouseDown={startRecording}
-              onMouseUp={stopRecording}
-              onMouseLeave={stopRecording}
-              onTouchStart={startRecording}
-              onTouchEnd={stopRecording}
-              className={`w-20 h-20 rounded-full shadow-xl flex items-center justify-center transition-all ${isListening ? 'bg-red-500 scale-110 animate-pulse' : 'bg-primary hover:scale-105'}`}
-              style={{ touchAction: 'none' }}
-              title={isListening ? 'Listening...' : 'Hold to speak'}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" x2="12" y1="19" y2="22" />
-              </svg>
-            </button>
           </div>
 
           {/* Close Buttons - Fixed at Bottom */}
