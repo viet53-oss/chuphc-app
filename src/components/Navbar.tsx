@@ -23,7 +23,7 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-titles">
-        <h1 className="title-lg" style={{ color: 'red', fontWeight: 'bold' }}>Chu Precision Health Center</h1>
+        <h1 className="title-lg" style={{ color: '#2D5A27', fontWeight: 'bold' }}>Chu Precision Health Center</h1>
         <h2 className="title-lg">{getPageTitle()}</h2>
       </div>
 
