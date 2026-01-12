@@ -105,8 +105,10 @@ export default function Dashboard() {
     setChatMessages(prev => [...prev, userMessage]);
     await saveChatMessage('user', text);
 
-    // Simple bot response (you can enhance this later)
-    const botResponse = { role: 'bot', content: `I heard you say: "${text}". How can I help you with that?` };
+    // Get intelligent response from health knowledge base
+    const { getHealthAnswer } = await import('@/lib/health-knowledge');
+    const botResponse = { role: 'bot', content: getHealthAnswer(text) };
+
     setTimeout(async () => {
       setChatMessages(prev => [...prev, botResponse]);
       await saveChatMessage('bot', botResponse.content);
