@@ -104,7 +104,7 @@ export default function Dashboard() {
       {isChatOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 200, backgroundColor: 'white', display: 'flex', flexDirection: 'column' }}>
           {/* Use same header as other pages */}
-          <Navbar />
+          <Navbar customTitle="Chat Conversation" />
 
           {/* Chat Messages Area */}
           <div className="flex-1 p-6 overflow-y-auto" style={{ backgroundColor: '#f9fafb' }}>

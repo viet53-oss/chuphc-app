@@ -4,11 +4,12 @@ import { User } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function Navbar() {
+export default function Navbar({ customTitle }: { customTitle?: string }) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
 
   const getPageTitle = () => {
+    if (customTitle) return customTitle;
     const path = pathname.split('/').pop() || '';
     if (!path) return 'Health Dashboard';
     if (path === 'lifestyle-rx') return 'Lifestyle Prescription';
