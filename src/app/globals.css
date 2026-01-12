@@ -45,7 +45,7 @@ strong {
 /* SECTION SYSTEM */
 .app-section {
   width: 100%;
-  padding: 16px;
+  padding: 16px 4px;
   border: var(--border-width) solid #000000;
   border-radius: var(--radius-lg);
   background-color: #ffffff;
@@ -57,7 +57,7 @@ strong {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 16px 24px;
+  padding: 16px 4px;
   background-color: #ffffff;
   border-bottom: 2px solid #000000;
   /* Matching heavy border style */
@@ -123,7 +123,7 @@ strong {
 main {
   flex: 1;
   width: 100%;
-  padding: 16px;
+  padding: 16px 4px;
   display: flex;
   flex-direction: column;
   gap: 16px;

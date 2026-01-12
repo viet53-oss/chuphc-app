@@ -164,7 +164,7 @@ export default function NutritionPage() {
             <div className="flex flex-col gap-4 w-full animate-fade-in pb-24">
 
                 {/* Dashboard Summary Card */}
-                <section className="app-section bg-gradient-to-br from-[#10b981] to-[#059669] !border-none text-white p-6 shadow-xl relative overflow-hidden">
+                <section className="app-section bg-gradient-to-br from-[#10b981] to-[#059669] !border-none text-white p-6 px-1 shadow-xl relative overflow-hidden">
                     <div className="relative z-10">
                         <div className="flex items-center gap-2 mb-1">
                             <Apple size={20} />
@@ -209,12 +209,12 @@ export default function NutritionPage() {
 
                 {/* Recent Meals List */}
                 <div className="flex flex-col gap-3 px-1">
-                    <h4 className="text-[12pt] font-black uppercase text-gray-400 tracking-widest px-4">Recent fuel History</h4>
+                    <h4 className="text-[12pt] font-black uppercase text-gray-400 tracking-widest px-1">Recent fuel History</h4>
                     {recentLogs.length === 0 ? (
                         <div className="p-10 text-center opacity-30 italic font-bold">No meals logged yet</div>
                     ) : (
                         recentLogs.map((log) => (
-                            <div key={log.id} className="app-section flex items-center justify-between !p-5 !border-gray-200">
+                            <div key={log.id} className="app-section flex items-center justify-between !p-5 !px-1 !border-gray-200">
                                 <div className="flex items-center gap-4">
                                     <div className="p-3 bg-gray-50 text-primary rounded-xl">
                                         {log.meal_type === 'breakfast' && <Coffee size={24} />}
@@ -248,7 +248,7 @@ export default function NutritionPage() {
                         <div className="bg-white w-full sm:max-w-lg h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
 
                             {/* Modal Header */}
-                            <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                            <div className="p-6 px-1 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
                                 <div>
                                     <h2 className="text-[20pt] font-black uppercase tracking-tighter">Record Meal</h2>
                                     <p className="text-[10pt] font-bold text-gray-400 uppercase tracking-widest">{date}</p>
@@ -262,7 +262,7 @@ export default function NutritionPage() {
                             </div>
 
                             {/* Modal Content - Scrollable */}
-                            <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+                            <div className="flex-1 overflow-y-auto p-6 px-1 space-y-8 no-scrollbar">
 
                                 {/* Photo Upload Section */}
                                 <div className="space-y-3">
@@ -394,7 +394,7 @@ export default function NutritionPage() {
                             </div>
 
                             {/* Modal Footer */}
-                            <div className="p-6 border-t border-gray-100 bg-white grid grid-cols-2 gap-4">
+                            <div className="p-6 px-1 border-t border-gray-100 bg-white grid grid-cols-2 gap-4">
                                 <button
                                     onClick={closeLog}
                                     className="py-4 bg-gray-100 text-gray-500 rounded-2xl font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
@@ -414,7 +414,7 @@ export default function NutritionPage() {
                 )}
 
                 {/* Bottom Navigation Buttons */}
-                <div className="flex justify-between px-2 mt-8 mb-10">
+                <div className="flex justify-between px-1 mt-8 mb-10">
                     <Link href="/" className="btn-logout">
                         HOME
                     </Link>
