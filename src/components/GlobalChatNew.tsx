@@ -57,8 +57,8 @@ export default function GlobalChat() {
         }
     };
 
-    const saveChatMessage = async (role: string, content: string) => {
-        if (!user) return;
+    const saveChatMessage = async (role: string, content: string): Promise<boolean> => {
+        if (!user) return false;
         const { error } = await supabase.from('chat_messages').insert([{
             user_id: user.id,
             role,
@@ -68,7 +68,14 @@ export default function GlobalChat() {
 
         if (error) {
             console.error('Failed to save chat message:', error);
+            // Visual feedback for debugging
+            setChatMessages(prev => [...prev, {
+                role: 'bot',
+                content: `⚠️ System Error: Failed to save message. Reason: ${error.message || 'Unknown'}`
+            }]);
+            return false;
         }
+        return true;
     };
 
     const handleVoiceInput = async (text: string) => {
