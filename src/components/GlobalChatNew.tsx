@@ -6,6 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { MessageCircle, X, Mic, Volume2, VolumeX, Send, Download } from 'lucide-react';
 import { colors, spacing, fontSize } from '@/lib/design-system';
 
+import { getGeminiResponse } from '@/app/chat-actions';
+
 export default function GlobalChat() {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [chatMessages, setChatMessages] = useState<Array<{ role: string; content: string; created_at?: string }>>([
@@ -66,25 +68,43 @@ export default function GlobalChat() {
         setChatMessages(prev => [...prev, userMessage]);
         await saveChatMessage('user', text);
 
+
+
         const clientData = await fetchClientData();
 
-        setTimeout(async () => {
-            let responseText = '';
+        // 1. Check for specific actions (Add/Update/Delete)
+        const actionResult = await executeAction(text, clientData);
 
-            const actionResult = await executeAction(text, clientData);
+        let responseText = '';
 
-            if (actionResult) {
-                responseText = actionResult;
-            } else {
-                responseText = generateResponseWithData(text, clientData);
+        if (actionResult) {
+            responseText = actionResult;
+        } else {
+            // 2. Check for simple local lookups (Date/Time) to save API calls
+            const lowerQuery = text.toLowerCase();
+            if (lowerQuery.includes('date') || lowerQuery.includes('what day')) {
+                responseText = `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
             }
+            else if (lowerQuery.includes('time') && (lowerQuery.includes('what') || lowerQuery.includes('current'))) {
+                responseText = `It is currently ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`;
+            }
+            else {
+                // 3. Fallback to Gemini AI for everything else (Health questions, summaries, small talk)
+                setIsListening(true); // Keep "listening" visual state or show "thinking" state if we had one
+                try {
+                    responseText = await getGeminiResponse(text, clientData);
+                } catch (e) {
+                    responseText = "I'm having trouble thinking right now. Please try again.";
+                }
+                setIsListening(false);
+            }
+        }
 
-            const botResponse = { role: 'bot', content: responseText };
-            setChatMessages(prev => [...prev, botResponse]);
-            await saveChatMessage('bot', botResponse.content);
+        const botResponse = { role: 'bot', content: responseText };
+        setChatMessages(prev => [...prev, botResponse]);
+        await saveChatMessage('bot', botResponse.content);
 
-            speakResponse(responseText);
-        }, 1000);
+        speakResponse(responseText);
     };
 
     const executeAction = async (query: string, data: any): Promise<string | null> => {
@@ -173,7 +193,7 @@ export default function GlobalChat() {
         if (!user) return {};
 
         try {
-            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
             const { data: nutritionLogs } = await supabase.from('nutrition_logs').select('*').eq('user_id', user.id).order('logged_at', { ascending: false });
             const { data: activityLogs } = await supabase.from('activity_logs').select('*').eq('user_id', user.id).order('logged_at', { ascending: false });
             const { data: sleepLogs } = await supabase.from('sleep_logs').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
@@ -181,8 +201,8 @@ export default function GlobalChat() {
             const { data: socialLogs } = await supabase.from('social_logs').select('*').eq('user_id', user.id).order('logged_at', { ascending: false });
             const { data: substanceLogs } = await supabase.from('substance_logs').select('*').eq('user_id', user.id).order('logged_at', { ascending: false });
             const { data: goals } = await supabase.from('goals').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-            const { data: settings } = await supabase.from('user_settings').select('*').eq('user_id', user.id).single();
-            const { data: memberProfile } = await supabase.from('members').select('*').eq('id', user.id).single();
+            const { data: settings } = await supabase.from('user_settings').select('*').eq('user_id', user.id).maybeSingle();
+            const { data: memberProfile } = await supabase.from('members').select('*').eq('id', user.id).maybeSingle();
 
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -238,6 +258,24 @@ export default function GlobalChat() {
         const lowerQuery = query.toLowerCase();
 
         // Check for specific food item queries first
+
+        // 1. Common Sense & Utility Questions
+        if (lowerQuery.includes('date') || lowerQuery.includes('what day')) {
+            return `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
+        }
+
+        if (lowerQuery.includes('time') && (lowerQuery.includes('what') || lowerQuery.includes('current'))) {
+            return `It is currently ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`;
+        }
+
+        if (lowerQuery === 'hello' || lowerQuery === 'hi' || lowerQuery === 'hey' || lowerQuery.startsWith('hello ') || lowerQuery.startsWith('hi ')) {
+            return "Hello! 👋 I'm your Chu Health Assistant. How can I help you achieve your wellness goals today?";
+        }
+
+        if (lowerQuery.includes('help') || lowerQuery.includes('what can you do')) {
+            return "I can help you track and manage your health! \n\nTry asking me:\n• 'What did I eat today?'\n• 'Log a 500 calorie ham sandwich for lunch'\n• 'How is my sleep?'\n• 'Show my profile'";
+        }
+
         if (data.nutrition?.recentLogs && data.nutrition.recentLogs.length > 0) {
             // Extract potential food item from query (remove common words)
             const foodQuery = lowerQuery

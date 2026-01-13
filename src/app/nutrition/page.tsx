@@ -148,18 +148,24 @@ export default function NutritionPage() {
         if (!user) return;
 
         const loadMeals = async () => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
+            // Fetch recent logs and filter client-side for "Today"
+            // This avoids timezone mismatch issues between device and server query
             const { data, error } = await supabase
                 .from('nutrition_logs')
                 .select('*')
                 .eq('user_id', user.id)
-                .gte('logged_at', today.toISOString())
-                .order('logged_at', { ascending: false });
+                .order('logged_at', { ascending: false })
+                .limit(100);
 
             if (data && !error) {
-                const meals = data.map(log => {
+                // Filter for today in local time
+                const todayStr = new Date().toDateString();
+
+                const todaysLogs = data.filter(log => {
+                    return new Date(log.logged_at).toDateString() === todayStr;
+                });
+
+                const meals = todaysLogs.map(log => {
                     const loggedTime = new Date(log.logged_at);
                     const notes = log.notes ? JSON.parse(log.notes) : {};
 
@@ -183,11 +189,33 @@ export default function NutritionPage() {
 
         loadMeals();
 
+        // Subscribe to realtime changes
+        const channel = supabase
+            .channel('nutrition_logs_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'nutrition_logs',
+                    filter: `user_id=eq.${user.id}`
+                },
+                (payload) => {
+                    console.log('Realtime change detected:', payload);
+                    loadMeals(); // Reload logs when any change happens
+                }
+            )
+            .subscribe();
+
         // Load breakfast frequency from localStorage
         const savedFrequency = localStorage.getItem('breakfast_frequency');
         if (savedFrequency) {
             setBreakfastItemFrequency(JSON.parse(savedFrequency));
         }
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [user]);
 
     // Log Meal Form States
@@ -467,7 +495,9 @@ export default function NutritionPage() {
                     margin: '2px'
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px' }}>
-                        <h2 style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0 }}>Today's Summary</h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <h2 style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0 }}>Today's Summary</h2>
+                        </div>
                         <Link href="/" style={{ textDecoration: 'none' }}>
                             <button style={{
                                 padding: '10px',
