@@ -167,10 +167,27 @@ export default function GlobalChat() {
             }
         }
 
+        // Helper to extract best meal name
+        const getMealName = (item: any): string => {
+            if (item.food_name) return item.food_name;
+            if (item.meal_name) return item.meal_name;
+            if (item.notes) {
+                try {
+                    const notes = typeof item.notes === 'string' ? JSON.parse(item.notes) : item.notes;
+                    if (notes.items && Array.isArray(notes.items) && notes.items.length > 0) {
+                        return notes.items.join(', ');
+                    }
+                } catch (e) {
+                    return item.notes; // Return raw notes if not JSON
+                }
+            }
+            return 'a meal';
+        };
+
         // Questions like "what did I eat today?"
         if (lowerQuery.includes('what did i eat') || lowerQuery.includes('what have i eaten')) {
             if (nutritionLogs.length > 0) {
-                const foods = nutritionLogs.map((item: any) => item.meal_name).filter(Boolean);
+                const foods = nutritionLogs.map(getMealName).filter((name: string) => name && name !== 'a meal');
                 return foods.length > 0
                     ? `Today you ate: ${foods.join(', ')}.`
                     : "You haven't logged any food today.";
@@ -205,7 +222,8 @@ export default function GlobalChat() {
         if (lowerQuery.includes('last meal') || lowerQuery.includes('latest meal')) {
             if (nutritionLogs.length > 0) {
                 const lastMeal = nutritionLogs[0]; // Already sorted by logged_at descending
-                return `Your last meal was ${lastMeal.meal_name || 'unknown'} (${lastMeal.calories || 0} calories).`;
+                const mealName = getMealName(lastMeal);
+                return `Your last meal was ${mealName} (${lastMeal.calories || 0} calories).`;
             } else {
                 return "You haven't logged any meals today.";
             }
