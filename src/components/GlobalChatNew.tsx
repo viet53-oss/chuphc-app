@@ -125,7 +125,7 @@ export default function GlobalChat() {
             const foodItem = foodMatch[1];
             if (clientData?.nutrition && clientData.nutrition.length > 0) {
                 const found = clientData.nutrition.some((item: any) =>
-                    item.food_name?.toLowerCase().includes(foodItem)
+                    item.meal_name?.toLowerCase().includes(foodItem)
                 );
                 return found
                     ? `Yes, you had ${foodItem} today.`
@@ -138,7 +138,7 @@ export default function GlobalChat() {
         // Questions like "what did I eat today?"
         if (lowerQuery.includes('what did i eat') || lowerQuery.includes('what have i eaten')) {
             if (clientData?.nutrition && clientData.nutrition.length > 0) {
-                const foods = clientData.nutrition.map((item: any) => item.food_name).filter(Boolean);
+                const foods = clientData.nutrition.map((item: any) => item.meal_name).filter(Boolean);
                 return foods.length > 0
                     ? `Today you ate: ${foods.join(', ')}.`
                     : "You haven't logged any food today.";
