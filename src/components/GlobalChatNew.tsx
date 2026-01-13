@@ -159,6 +159,48 @@ export default function GlobalChat() {
             }
         }
 
+        // Today's calories
+        if (lowerQuery.includes('calorie') || lowerQuery.includes('today\'s calorie')) {
+            if (clientData?.nutrition && clientData.nutrition.length > 0) {
+                const totalCalories = clientData.nutrition.reduce((sum: number, item: any) => sum + (item.calories || 0), 0);
+                return `Today you've consumed ${totalCalories} calories.`;
+            } else {
+                return "You haven't logged any food today, so I can't calculate your calories.";
+            }
+        }
+
+        // Last meal
+        if (lowerQuery.includes('last meal') || lowerQuery.includes('latest meal')) {
+            if (clientData?.nutrition && clientData.nutrition.length > 0) {
+                const lastMeal = clientData.nutrition[clientData.nutrition.length - 1];
+                return `Your last meal was ${lastMeal.meal_name || 'unknown'} (${lastMeal.calories || 0} calories).`;
+            } else {
+                return "You haven't logged any meals today.";
+            }
+        }
+
+        // Health summary
+        if (lowerQuery.includes('health summary') || lowerQuery.includes('summary')) {
+            const parts = [];
+
+            if (clientData?.nutrition && clientData.nutrition.length > 0) {
+                const totalCalories = clientData.nutrition.reduce((sum: number, item: any) => sum + (item.calories || 0), 0);
+                parts.push(`Nutrition: ${clientData.nutrition.length} meals, ${totalCalories} calories`);
+            }
+
+            if (clientData?.exercise && clientData.exercise.length > 0) {
+                parts.push(`Exercise: ${clientData.exercise.length} activities`);
+            }
+
+            if (clientData?.sleep && clientData.sleep.length > 0) {
+                parts.push(`Sleep: ${clientData.sleep.length} logs`);
+            }
+
+            return parts.length > 0
+                ? `Today's summary: ${parts.join('; ')}.`
+                : "You haven't logged any health data today.";
+        }
+
         // Default: couldn't answer locally
         console.log('[handleLocalQuery] No matching pattern, returning empty');
         return '';
@@ -197,8 +239,16 @@ export default function GlobalChat() {
                 console.log('[handleVoiceInput] Using local time response');
                 responseText = `It is currently ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`;
             }
-            // 3. Check for simple data queries (e.g., "did I have banana today?")
-            else if (lowerQuery.includes('did i') || lowerQuery.includes('have i') || lowerQuery.includes('what did i')) {
+            // 3. Check for simple data queries
+            else if (
+                lowerQuery.includes('did i') ||
+                lowerQuery.includes('have i') ||
+                lowerQuery.includes('what did i') ||
+                lowerQuery.includes('calorie') ||
+                lowerQuery.includes('last meal') ||
+                lowerQuery.includes('summary') ||
+                lowerQuery.includes('exercise')
+            ) {
                 console.log('[handleVoiceInput] Attempting local data query');
                 responseText = handleLocalQuery(text, clientData);
 
