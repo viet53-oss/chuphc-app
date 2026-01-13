@@ -16,6 +16,7 @@ export default function GlobalChat() {
     const [textInput, setTextInput] = useState('');
     const [isListening, setIsListening] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(false);
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
     const { user, loading } = useAuth();
     const recognitionRef = useRef<any>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -527,10 +528,6 @@ export default function GlobalChat() {
     };
 
     const clearChatHistory = async () => {
-        if (!confirm('Are you sure you want to clear all chat history? This cannot be undone.')) {
-            return;
-        }
-
         console.log('[clearChatHistory] Starting clear operation');
 
         // Get current user
@@ -567,7 +564,12 @@ export default function GlobalChat() {
                 content: "Hello! I'm your Chu Health Assistant. Ask me anything about your health!"
             }]);
             console.log('[clearChatHistory] Chat history cleared successfully');
+            setShowClearConfirm(false); // Close confirmation modal
         }
+    };
+
+    const handleClearConfirm = () => {
+        clearChatHistory();
     };
 
     const handleQuickAction = (action: string) => {
@@ -653,7 +655,7 @@ export default function GlobalChat() {
                                 <button onClick={exportChat} style={{ backgroundColor: colors.black, color: 'white', borderRadius: '50%', padding: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Export Chat">
                                     <Download size={20} />
                                 </button>
-                                <button onClick={clearChatHistory} style={{ backgroundColor: colors.red, color: 'white', borderRadius: '50%', padding: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Clear Chat History">
+                                <button onClick={() => setShowClearConfirm(true)} style={{ backgroundColor: colors.red, color: 'white', borderRadius: '50%', padding: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Clear Chat History">
                                     <Trash2 size={20} />
                                 </button>
                                 <button onClick={() => setIsChatOpen(false)} style={{ backgroundColor: 'black', color: 'white', borderRadius: '9999px', padding: '8px 16px', fontWeight: 'bold', fontSize: fontSize.sm, border: 'none', cursor: 'pointer' }}>
@@ -694,6 +696,24 @@ export default function GlobalChat() {
                                     <Mic size={24} color="white" />
                                 </button>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Clear Confirmation Modal */}
+            {showClearConfirm && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: spacing.md }}>
+                    <div style={{ backgroundColor: 'white', borderRadius: '16px', padding: spacing.xl, maxWidth: '400px', width: '100%', border: '2px solid black' }}>
+                        <h3 style={{ fontSize: fontSize.lg, fontWeight: 'bold', marginBottom: spacing.md, textAlign: 'center' }}>Clear Chat History?</h3>
+                        <p style={{ fontSize: fontSize.base, marginBottom: spacing.lg, textAlign: 'center', color: colors.gray }}>This will permanently delete all your chat messages. This action cannot be undone.</p>
+                        <div style={{ display: 'flex', gap: spacing.md }}>
+                            <button onClick={() => setShowClearConfirm(false)} style={{ flex: 1, padding: spacing.md, backgroundColor: colors.gray, color: 'white', border: 'none', borderRadius: '9999px', fontSize: fontSize.base, fontWeight: 'bold', cursor: 'pointer' }}>
+                                Cancel
+                            </button>
+                            <button onClick={handleClearConfirm} style={{ flex: 1, padding: spacing.md, backgroundColor: colors.red, color: 'white', border: 'none', borderRadius: '9999px', fontSize: fontSize.base, fontWeight: 'bold', cursor: 'pointer' }}>
+                                Delete All
+                            </button>
                         </div>
                     </div>
                 </div>
