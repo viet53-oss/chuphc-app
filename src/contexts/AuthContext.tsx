@@ -36,19 +36,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
-        // Check active session
-        auth.getSession().then((session) => {
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
+        let mounted = true;
+
+        // Check active session on mount
+        const initSession = async () => {
+            try {
+                const session = await auth.getSession();
+                if (mounted) {
+                    setUser(session?.user ?? null);
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+                if (mounted) setLoading(false);
+            }
+        };
+
+        initSession();
 
         // Listen for auth changes
-        const { data: { subscription } } = auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-            setLoading(false);
+        const { data: { subscription } } = auth.onAuthStateChange((event, session) => {
+            if (!mounted) return;
+
+            console.log(`Auth Event: ${event}`); // Debug logging
+
+            if (event === 'SIGNED_OUT') {
+                setUser(null);
+                setLoading(false);
+            } else if (session?.user) {
+                setUser(session.user);
+                setLoading(false);
+            } else if (event === 'TOKEN_REFRESHED' && !session) {
+                // Handle rare case where refresh fails but doesn't trigger sign out
+                // We kept the previous user state mostly, or verify again? 
+                // Usually session is present on refresh.
+            }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     const handleSignOut = async () => {
