@@ -59,7 +59,7 @@ USER MESSAGE: "${message}"
                 const result = await model.generateContent(systemPrompt);
                 const response = result.response;
                 return response.text();
-            } catch (error) {
+            } catch (error: any) {
                 console.error(`Gemini Attempt ${attempt + 1} failed:`, error);
                 lastError = error;
                 // If it's a 429 (Too Many Requests), wait longer
