@@ -58,18 +58,21 @@ export default function GlobalChat() {
     };
 
     const saveChatMessage = async (role: string, content: string): Promise<boolean> => {
-        if (!user) {
+        // Get current user directly from Supabase to avoid closure issues
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+        if (!currentUser) {
             console.error('[saveChatMessage] No user found');
             return false;
         }
 
         console.log(`[saveChatMessage] Saving ${role} message:`, content.substring(0, 50));
-        console.log(`[saveChatMessage] User ID:`, user.id);
+        console.log(`[saveChatMessage] User ID:`, currentUser.id);
 
         const { data, error } = await supabase
             .from('chat_messages')
             .insert([{
-                user_id: user.id,
+                user_id: currentUser.id,
                 role,
                 content
                 // Let DB handle created_at with DEFAULT NOW()
