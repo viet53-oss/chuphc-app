@@ -100,9 +100,12 @@ export default function GlobalChat() {
     const handleVoiceInput = async (text: string) => {
         if (!text.trim()) return;
 
+        console.log('[handleVoiceInput] Processing message:', text);
+
         const userMessage = { role: 'user', content: text };
         setChatMessages(prev => [...prev, userMessage]);
-        await saveChatMessage('user', text);
+        const userSaved = await saveChatMessage('user', text);
+        console.log('[handleVoiceInput] User message saved:', userSaved);
 
 
 
@@ -114,31 +117,39 @@ export default function GlobalChat() {
         let responseText = '';
 
         if (actionResult) {
+            console.log('[handleVoiceInput] Action result:', actionResult.substring(0, 50));
             responseText = actionResult;
         } else {
             // 2. Check for simple local lookups (Date/Time) to save API calls
             const lowerQuery = text.toLowerCase();
             if (lowerQuery.includes('date') || lowerQuery.includes('what day')) {
+                console.log('[handleVoiceInput] Using local date response');
                 responseText = `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
             }
             else if (lowerQuery.includes('time') && (lowerQuery.includes('what') || lowerQuery.includes('current'))) {
+                console.log('[handleVoiceInput] Using local time response');
                 responseText = `It is currently ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`;
             }
             else {
                 // 3. Fallback to Gemini AI for everything else (Health questions, summaries, small talk)
+                console.log('[handleVoiceInput] Calling Gemini API');
                 setIsListening(true); // Keep "listening" visual state or show "thinking" state if we had one
                 try {
                     responseText = await getGeminiResponse(text, clientData);
+                    console.log('[handleVoiceInput] Gemini response received:', responseText.substring(0, 50));
                 } catch (e) {
+                    console.error('[handleVoiceInput] Gemini error:', e);
                     responseText = "I'm having trouble thinking right now. Please try again.";
                 }
                 setIsListening(false);
             }
         }
 
+        console.log('[handleVoiceInput] Final response text:', responseText.substring(0, 50));
         const botResponse = { role: 'bot', content: responseText };
         setChatMessages(prev => [...prev, botResponse]);
-        await saveChatMessage('bot', botResponse.content);
+        const botSaved = await saveChatMessage('bot', botResponse.content);
+        console.log('[handleVoiceInput] Bot response saved:', botSaved);
 
         speakResponse(responseText);
     };
