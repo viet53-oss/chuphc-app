@@ -492,7 +492,7 @@ export default function GlobalChat() {
                             )}
 
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md, justifyContent: 'center' }}>
-                                {["Show today's calories", "What was my last meal?", "Health summary", "My profile"].map((action) => (
+                                {["Today's calories", "What was my last meal?", "Health summary"].map((action) => (
                                     <button key={action} onClick={() => handleQuickAction(action)} style={{ padding: '8px 16px', backgroundColor: colors.white, color: colors.black, border: '2px solid black', borderRadius: '9999px', fontSize: '12pt', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.black; e.currentTarget.style.color = colors.white; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.white; e.currentTarget.style.color = colors.black; }}>
                                         {action}
                                     </button>
@@ -502,9 +502,9 @@ export default function GlobalChat() {
                         </div>
 
                         <div style={{ padding: spacing.lg, borderTop: '2px solid black', borderBottom: '2px solid black', backgroundColor: colors.white }}>
-                            <form onSubmit={handleTextSubmit} style={{ width: '100%', display: 'flex', gap: spacing.sm, alignItems: 'center' }}>
-                                <input type="text" value={textInput} onChange={(e) => setTextInput(e.target.value)} placeholder="Type your question..." style={{ flex: 1, padding: '12px 16px', border: '2px solid black', borderRadius: '9999px', fontSize: '14pt', outline: 'none' }} />
-                                <button type="submit" style={{ padding: '10px 20px', backgroundColor: colors.black, color: colors.white, border: 'none', borderRadius: '9999px', fontSize: '14pt', fontWeight: '700', cursor: 'pointer', minWidth: '80px' }}>
+                            <form onSubmit={handleTextSubmit} style={{ width: '100%', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                <input type="text" value={textInput} onChange={(e) => setTextInput(e.target.value)} placeholder="Type your question..." style={{ flex: 1, minWidth: 0, padding: '12px 16px', border: '2px solid black', borderRadius: '9999px', fontSize: '14pt', outline: 'none' }} />
+                                <button type="submit" style={{ padding: '12px 16px', backgroundColor: colors.black, color: colors.white, border: 'none', borderRadius: '9999px', fontSize: '14pt', fontWeight: '700', cursor: 'pointer', flexShrink: 0 }}>
                                     Send
                                 </button>
                                 <button type="button" onMouseDown={startRecording} onMouseUp={stopRecording} onTouchStart={startRecording} onTouchEnd={stopRecording} style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: isListening ? colors.red : colors.black, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', transition: 'transform 0.1s', transform: isListening ? 'scale(1.1)' : 'scale(1)', flexShrink: 0 }} title={isListening ? 'Release to Send' : 'Hold to Speak'}>
