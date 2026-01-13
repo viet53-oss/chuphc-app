@@ -17,6 +17,7 @@ export default function GlobalChat() {
     const [isListening, setIsListening] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     const { user, loading } = useAuth();
     const recognitionRef = useRef<any>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -144,7 +145,7 @@ export default function GlobalChat() {
             else {
                 // 3. Fallback to Gemini AI for everything else (Health questions, summaries, small talk)
                 console.log('[handleVoiceInput] Calling Gemini API');
-                setIsListening(true); // Keep "listening" visual state or show "thinking" state if we had one
+                setIsProcessing(true); // Show processing state instead of listening
                 try {
                     responseText = await getGeminiResponse(text, clientData);
                     console.log('[handleVoiceInput] Gemini response received:', responseText.substring(0, 50));
@@ -152,7 +153,7 @@ export default function GlobalChat() {
                     console.error('[handleVoiceInput] Gemini error:', e);
                     responseText = "I'm having trouble thinking right now. Please try again.";
                 }
-                setIsListening(false);
+                setIsProcessing(false);
             }
         }
 
