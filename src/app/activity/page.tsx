@@ -17,8 +17,8 @@ export default function ActivityPage() {
     // Accelerometer-based step counting
     useEffect(() => {
         let stepCount = 0;
-        const STEP_THRESHOLD = 3.0; // Increased from 1.2 - higher threshold requires more significant movement
-        const STEP_DELAY = 500; // Increased from 250ms - minimum time between step detections
+        const STEP_THRESHOLD = 2.0; // Balanced sensitivity - not too sensitive, not too insensitive
+        const STEP_DELAY = 350; // Balanced delay - allows accurate step detection
 
         if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
             const handleMotion = (event: DeviceMotionEvent) => {
