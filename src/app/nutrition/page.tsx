@@ -116,6 +116,16 @@ const SNACK_ITEMS = [
     { name: 'Banana', calories: 105 }
 ];
 
+// Interface for Meal Log
+interface MealLog {
+    id: string;
+    time: string;
+    type: string;
+    items: string[];
+    mood: string;
+    calories: number;
+}
+
 export default function NutritionPage() {
     const { user, isAdmin } = useAuth();
     const [dailyCalories, setDailyCalories] = useState(0);
@@ -135,14 +145,11 @@ export default function NutritionPage() {
     const [snackMood, setSnackMood] = useState('');
     const [breakfastSortMode, setBreakfastSortMode] = useState<'like' | 'abc' | 'calories'>('like');
     const [breakfastItemFrequency, setBreakfastItemFrequency] = useState<Record<string, number>>({});
-    const [mealLog, setMealLog] = useState<Array<{
-        id: string;
-        time: string;
-        type: string;
-        items: string[];
-        mood: string;
-        calories: number;
-    }>>([]);
+    const [mealLog, setMealLog] = useState<MealLog[]>([]);
+
+    // Delete Confirmation State
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [mealToDelete, setMealToDelete] = useState<string | null>(null);
 
     // Load meal log from Supabase on mount
     useEffect(() => {
@@ -481,25 +488,37 @@ export default function NutritionPage() {
 
     const unselectedFoods = FOOD_ITEMS.filter(f => !selectedFoods.includes(f));
 
-    const handleDeleteMeal = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this meal log?')) return;
+    const handleDeleteClick = (id: string) => {
+        setMealToDelete(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!mealToDelete) return;
 
         const { error } = await supabase
             .from('nutrition_logs')
             .delete()
-            .eq('id', id);
+            .eq('id', mealToDelete);
 
         if (error) {
             alert('Error deleting meal: ' + error.message);
         } else {
             // Optimistic update
-            const deletedMeal = mealLog.find(m => m.id === id);
+            const deletedMeal = mealLog.find(m => m.id === mealToDelete);
             if (deletedMeal) {
                 setDailyCalories(prev => Math.max(0, prev - deletedMeal.calories));
                 setMealsLogged(prev => Math.max(0, prev - 1));
-                setMealLog(prev => prev.filter(m => m.id !== id));
+                setMealLog(prev => prev.filter(m => m.id !== mealToDelete));
             }
         }
+        setShowDeleteConfirm(false);
+        setMealToDelete(null);
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteConfirm(false);
+        setMealToDelete(null);
     };
 
     const handleAddMeal = () => {
@@ -711,7 +730,7 @@ export default function NutritionPage() {
                                             </span>
                                             {isAdmin && (
                                                 <button
-                                                    onClick={() => handleDeleteMeal(meal.id)}
+                                                    onClick={() => handleDeleteClick(meal.id)}
                                                     style={{
                                                         background: 'none',
                                                         border: 'none',
@@ -758,944 +777,1010 @@ export default function NutritionPage() {
                     </Link>
                 </div>
 
-            </div>
-
-            {/* Log Meal Full-Screen Popup */}
-            {false && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    backgroundColor: 'white',
-                    zIndex: 200,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflow: 'hidden'
-                }}>
-                    {/* Header */}
-                    <Navbar customTitle="Log Meal" />
-
-                    {/* Scrollable Content */}
-                    <div style={{
-                        flex: 1,
-                        overflowY: 'auto',
-                        padding: spacing.lg,
-                        paddingBottom: '120px' // Space for footer
-                    }}>
-                        {/* Picture(s) */}
-                        <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
-                            <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Picture(s)<span style={{ color: 'red' }}>*</span></h3>
-                            <div style={{ marginTop: spacing.xs, cursor: 'pointer', display: 'inline-block' }}>
-                                <Camera size={40} color={colors.blue} />
-                            </div>
-                        </div>
-
-                        <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
-
-                        {/* Meal Type */}
-                        <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
-                            <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Meal Type<span style={{ color: 'red' }}>*</span></h3>
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.xxl, marginTop: spacing.md, flexWrap: 'wrap' }}>
-                                {[
-                                    { name: 'Breakfast', icon: Coffee },
-                                    { name: 'Lunch', icon: Apple },
-                                    { name: 'Dinner', icon: Utensils },
-                                    { name: 'Snack', icon: Cookie }
-                                ].map(type => (
-                                    <div
-                                        key={type.name}
-                                        onClick={() => setMealType(type.name)}
-                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', opacity: mealType === type.name ? 1 : 0.5 }}
-                                    >
-                                        <type.icon size={32} color={mealType === type.name ? colors.green : '#666'} />
-                                        <span style={{ fontSize: fontSize.xs, marginTop: '4px', color: mealType === type.name ? colors.green : '#666' }}>{type.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
-
-                        {/* Mood */}
-                        <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
-                            <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Mood<span style={{ color: 'red' }}>*</span></h3>
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.lg, marginTop: spacing.md, flexWrap: 'wrap' }}>
-                                {[
-                                    { name: 'Happy', icon: Smile },
-                                    { name: 'Neutral', icon: Meh },
-                                    { name: 'Tired', icon: Frown }
-                                ].map(m => (
-                                    <div
-                                        key={m.name}
-                                        onClick={() => setMood(m.name)}
-                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', opacity: mood === m.name ? 1 : 0.6 }}
-                                    >
-                                        <m.icon size={32} color={colors.secondary} fill={mood === m.name ? colors.secondary : 'none'} />
-                                        <span style={{ fontSize: fontSize.xs, marginTop: '4px' }}>{m.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
-
-                        {/* Your meal had */}
-                        <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
-                            <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Your meal had<span style={{ color: 'red' }}>*</span></h3>
-                            <p style={{ fontSize: fontSize.xs, color: '#666' }}>Click all that apply</p>
-
-                            <div style={{ display: 'flex', marginTop: spacing.md, gap: spacing.md }}>
-                                {/* Left Column: Available */}
-                                <div style={{ flex: 1, borderRight: '2px solid black', paddingRight: spacing.sm, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                                    <h4 style={{ fontSize: fontSize.sm, fontWeight: 'bold', marginBottom: spacing.sm }}>Available</h4>
-                                    {unselectedFoods.map(food => (
-                                        <button
-                                            key={food}
-                                            onClick={() => toggleFood(food)}
-                                            style={{
-                                                padding: '6px 12px',
-                                                backgroundColor: 'white',
-                                                border: '1px solid #ddd',
-                                                borderRadius: '4px',
-                                                fontSize: '12px',
-                                                cursor: 'pointer',
-                                                width: '100%',
-                                                textAlign: 'center'
-                                            }}
-                                        >
-                                            {food}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* Right Column: Selected */}
-                                <div style={{ flex: 1, paddingLeft: spacing.sm, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                                    <h4 style={{ fontSize: fontSize.sm, fontWeight: 'bold', marginBottom: spacing.sm }}>Selected</h4>
-                                    {selectedFoods.map(food => (
-                                        <button
-                                            key={food}
-                                            onClick={() => toggleFood(food)}
-                                            style={{
-                                                padding: '6px 12px',
-                                                backgroundColor: colors.primaryTint,
-                                                border: `2px solid ${colors.green}`,
-                                                borderRadius: '4px',
-                                                fontSize: '12px',
-                                                cursor: 'pointer',
-                                                width: '100%',
-                                                textAlign: 'center',
-                                                fontWeight: 'bold'
-                                            }}
-                                        >
-                                            {food}
-                                        </button>
-                                    ))}
-                                    {selectedFoods.length === 0 && <span style={{ color: '#999', fontSize: '12px', fontStyle: 'italic' }}>Select items from left</span>}
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
-
-                        {/* Meal Rating */}
-                        <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
-                            <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Meal Rating<span style={{ color: 'red' }}>*</span></h3>
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
-                                {[1, 2, 3, 4, 5].map(star => (
-                                    <Star
-                                        key={star}
-                                        size={32}
-                                        onClick={() => setRating(star)}
-                                        color={colors.secondary}
-                                        fill={rating >= star ? colors.secondary : "none"}
-                                        cursor="pointer"
-                                    />
-                                ))}
-                            </div>
-                        </div>
-
-                        <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
-
-                        {/* Meal Eating Speed */}
-                        <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
-                            <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Meal Eating Speed<span style={{ color: 'red' }}>*</span></h3>
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.xl, marginTop: spacing.md, flexWrap: 'wrap' }}>
-                                {['5 minutes', '10 minutes', '20 minutes'].map(s => (
-                                    <div key={s} onClick={() => setSpeed(s)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                                        {speed === s ? <CheckCircle2 size={20} color={colors.green} /> : <Circle size={20} color="#ccc" />}
-                                        <span style={{ fontSize: fontSize.sm }}>{s}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
-
-                        {/* Comment */}
-                        <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
-                            <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Comment</h3>
-                            <textarea
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                                placeholder="Comments about your meal"
-                                style={{
-                                    width: '100%',
-                                    marginTop: spacing.sm,
-                                    padding: spacing.md,
-                                    border: '1px solid #ddd',
-                                    borderRadius: '4px',
-                                    minHeight: '80px',
-                                    fontSize: fontSize.sm
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Footer - Fixed at bottom, under chatbot */}
+                {/* Custom Delete Confirmation Popup */}
+                {showDeleteConfirm && (
                     <div style={{
                         position: 'fixed',
-                        bottom: 0,
+                        top: 0,
                         left: 0,
                         right: 0,
-                        backgroundColor: 'white',
-                        borderTop: '2px solid black',
-                        padding: spacing.lg,
-                        zIndex: 201,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
                         display: 'flex',
-                        gap: spacing.md,
-                        paddingBottom: '24px' // Extra padding to be above chatbot button
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1100
                     }}>
-                        <button
-                            onClick={handleAddMeal}
-                            style={{
-                                flex: 1,
-                                backgroundColor: colors.green,
-                                color: 'white',
-                                padding: '12px 24px',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontWeight: 'bold',
-                                fontSize: fontSize.base,
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Add Meal
-                        </button>
-                        <button
-                            onClick={() => setShowLogMealPopup(false)}
-                            style={{
-                                flex: 1,
-                                backgroundColor: colors.gray,
-                                color: 'white',
-                                padding: '12px 24px',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontWeight: 'bold',
-                                fontSize: fontSize.base,
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Cancel
-                        </button>
-                        <Link href="/" style={{ textDecoration: 'none', flex: 1 }}>
-                            <button style={{
-                                width: '100%',
-                                backgroundColor: colors.black,
-                                color: 'white',
-                                padding: '12px 24px',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontWeight: 'bold',
-                                fontSize: fontSize.base,
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: spacing.xs
-                            }}>
-                                <Home size={20} />
-                                Home
-                            </button>
-                        </Link>
-                    </div>
-                </div>
-            )}
-
-            {/* Breakfast Full-Screen Popup */}
-            {showBreakfastPopup && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    backgroundColor: 'white',
-                    zIndex: 200,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflow: 'hidden'
-                }}>
-                    {/* Header */}
-                    <Navbar customTitle="Breakfast" />
-
-                    {/* Scrollable Content */}
-                    <div style={{
-                        flex: 1,
-                        overflowY: 'auto',
-                        padding: spacing.lg,
-                        paddingBottom: '140px' // Space for footer
-                    }}>
-                        <h3 style={{
-                            fontSize: fontSize.lg,
-                            fontWeight: 'bold',
-                            color: '#333',
-                            marginBottom: spacing.md,
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '24px',
+                            borderRadius: '12px',
+                            width: '320px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '20px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                             textAlign: 'center'
                         }}>
-                            Select Breakfast Items
-                        </h3>
-
-                        {/* Sort Buttons */}
-                        <div style={{
-                            display: 'flex',
-                            gap: spacing.sm,
-                            marginBottom: spacing.lg,
-                            justifyContent: 'center'
-                        }}>
-                            <button
-                                onClick={() => setBreakfastSortMode('like')}
-                                style={{
-                                    padding: '10px',
-                                    backgroundColor: breakfastSortMode === 'like' ? colors.secondary : colors.black,
-                                    color: colors.white,
-                                    border: 'none',
-                                    borderRadius: '9999px',
-                                    fontSize: '14pt',
-                                    fontWeight: '700',
-                                    cursor: 'pointer',
-                                    minWidth: '80px'
-                                }}
-                            >
-                                Like
-                            </button>
-                            <button
-                                onClick={() => setBreakfastSortMode('abc')}
-                                style={{
-                                    padding: '10px',
-                                    backgroundColor: breakfastSortMode === 'abc' ? colors.secondary : colors.black,
-                                    color: colors.white,
-                                    border: 'none',
-                                    borderRadius: '9999px',
-                                    fontSize: '14pt',
-                                    fontWeight: '700',
-                                    cursor: 'pointer',
-                                    minWidth: '80px'
-                                }}
-                            >
-                                ABC
-                            </button>
-                            <button
-                                onClick={() => setBreakfastSortMode('calories')}
-                                style={{
-                                    padding: '10px',
-                                    backgroundColor: breakfastSortMode === 'calories' ? colors.secondary : colors.black,
-                                    color: colors.white,
-                                    border: 'none',
-                                    borderRadius: '9999px',
-                                    fontSize: '14pt',
-                                    fontWeight: '700',
-                                    cursor: 'pointer',
-                                    minWidth: '100px'
-                                }}
-                            >
-                                Calories
-                            </button>
-                        </div>
-
-                        {/* Breakfast Items List */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-                            {getSortedBreakfastItems().map((item) => {
-                                const isSelected = selectedBreakfastItems.includes(item.name);
-                                return (
-                                    <div
-                                        key={item.name}
-                                        onClick={() => toggleBreakfastItem(item.name)}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            padding: spacing.md,
-                                            backgroundColor: isSelected ? colors.primaryTint : 'white',
-                                            border: `2px solid ${isSelected ? colors.secondary : '#ddd'}`,
-                                            borderRadius: '8px',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s'
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
-                                            {isSelected ? (
-                                                <CheckCircle2 size={24} color={colors.green} />
-                                            ) : (
-                                                <Circle size={24} color="#ccc" />
-                                            )}
-                                            <span style={{
-                                                fontSize: fontSize.base,
-                                                fontWeight: isSelected ? 'bold' : 'normal'
-                                            }}>
-                                                {item.name}
-                                            </span>
-                                        </div>
-                                        <span style={{
-                                            fontSize: fontSize.base,
-                                            fontWeight: 'bold',
-                                            color: colors.secondary
-                                        }}>
-                                            {item.calories} cal
-                                        </span>
-                                    </div>
-                                );
-                            })}
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Delete Meal Log?</h3>
+                            <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
+                                Are you sure you want to delete this meal log? This action cannot be undone.
+                            </p>
+                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '8px' }}>
+                                <button
+                                    onClick={cancelDelete}
+                                    style={{
+                                        flex: 1,
+                                        padding: '10px',
+                                        backgroundColor: '#f3f4f6',
+                                        color: '#374151',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        fontSize: '14px',
+                                        fontWeight: '600',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    style={{
+                                        flex: 1,
+                                        padding: '10px',
+                                        backgroundColor: '#ef4444',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        fontSize: '14px',
+                                        fontWeight: '600',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Delete
+                                </button>
+                            </div>
                         </div>
                     </div>
+                )}
 
-                    {/* Footer - Fixed at bottom */}
+                {/* Log Meal Full-Screen Popup */}
+                {false && (
                     <div style={{
                         position: 'fixed',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
+                        inset: 0,
                         backgroundColor: 'white',
-                        borderTop: '2px solid black',
-                        padding: spacing.lg,
-                        zIndex: 201,
-                        paddingBottom: '24px'
+                        zIndex: 200,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden'
                     }}>
-                        {/* Mood and Total Calories - Same Line */}
+                        {/* Header */}
+                        <Navbar customTitle="Log Meal" />
+
+                        {/* Scrollable Content */}
                         <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: spacing.md,
-                            padding: spacing.md,
-                            backgroundColor: colors.primaryTint,
-                            borderRadius: '8px',
-                            border: '2px solid black'
+                            flex: 1,
+                            overflowY: 'auto',
+                            padding: spacing.lg,
+                            paddingBottom: '120px' // Space for footer
                         }}>
-                            {/* Mood Selection */}
+                            {/* Picture(s) */}
+                            <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
+                                <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Picture(s)<span style={{ color: 'red' }}>*</span></h3>
+                                <div style={{ marginTop: spacing.xs, cursor: 'pointer', display: 'inline-block' }}>
+                                    <Camera size={40} color={colors.blue} />
+                                </div>
+                            </div>
+
+                            <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
+
+                            {/* Meal Type */}
+                            <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
+                                <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Meal Type<span style={{ color: 'red' }}>*</span></h3>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.xxl, marginTop: spacing.md, flexWrap: 'wrap' }}>
+                                    {[
+                                        { name: 'Breakfast', icon: Coffee },
+                                        { name: 'Lunch', icon: Apple },
+                                        { name: 'Dinner', icon: Utensils },
+                                        { name: 'Snack', icon: Cookie }
+                                    ].map(type => (
+                                        <div
+                                            key={type.name}
+                                            onClick={() => setMealType(type.name)}
+                                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', opacity: mealType === type.name ? 1 : 0.5 }}
+                                        >
+                                            <type.icon size={32} color={mealType === type.name ? colors.green : '#666'} />
+                                            <span style={{ fontSize: fontSize.xs, marginTop: '4px', color: mealType === type.name ? colors.green : '#666' }}>{type.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
+
+                            {/* Mood */}
+                            <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
+                                <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Mood<span style={{ color: 'red' }}>*</span></h3>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.lg, marginTop: spacing.md, flexWrap: 'wrap' }}>
+                                    {[
+                                        { name: 'Happy', icon: Smile },
+                                        { name: 'Neutral', icon: Meh },
+                                        { name: 'Tired', icon: Frown }
+                                    ].map(m => (
+                                        <div
+                                            key={m.name}
+                                            onClick={() => setMood(m.name)}
+                                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', opacity: mood === m.name ? 1 : 0.6 }}
+                                        >
+                                            <m.icon size={32} color={colors.secondary} fill={mood === m.name ? colors.secondary : 'none'} />
+                                            <span style={{ fontSize: fontSize.xs, marginTop: '4px' }}>{m.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
+
+                            {/* Your meal had */}
+                            <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
+                                <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Your meal had<span style={{ color: 'red' }}>*</span></h3>
+                                <p style={{ fontSize: fontSize.xs, color: '#666' }}>Click all that apply</p>
+
+                                <div style={{ display: 'flex', marginTop: spacing.md, gap: spacing.md }}>
+                                    {/* Left Column: Available */}
+                                    <div style={{ flex: 1, borderRight: '2px solid black', paddingRight: spacing.sm, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                        <h4 style={{ fontSize: fontSize.sm, fontWeight: 'bold', marginBottom: spacing.sm }}>Available</h4>
+                                        {unselectedFoods.map(food => (
+                                            <button
+                                                key={food}
+                                                onClick={() => toggleFood(food)}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    backgroundColor: 'white',
+                                                    border: '1px solid #ddd',
+                                                    borderRadius: '4px',
+                                                    fontSize: '12px',
+                                                    cursor: 'pointer',
+                                                    width: '100%',
+                                                    textAlign: 'center'
+                                                }}
+                                            >
+                                                {food}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Right Column: Selected */}
+                                    <div style={{ flex: 1, paddingLeft: spacing.sm, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                        <h4 style={{ fontSize: fontSize.sm, fontWeight: 'bold', marginBottom: spacing.sm }}>Selected</h4>
+                                        {selectedFoods.map(food => (
+                                            <button
+                                                key={food}
+                                                onClick={() => toggleFood(food)}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    backgroundColor: colors.primaryTint,
+                                                    border: `2px solid ${colors.green}`,
+                                                    borderRadius: '4px',
+                                                    fontSize: '12px',
+                                                    cursor: 'pointer',
+                                                    width: '100%',
+                                                    textAlign: 'center',
+                                                    fontWeight: 'bold'
+                                                }}
+                                            >
+                                                {food}
+                                            </button>
+                                        ))}
+                                        {selectedFoods.length === 0 && <span style={{ color: '#999', fontSize: '12px', fontStyle: 'italic' }}>Select items from left</span>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
+
+                            {/* Meal Rating */}
+                            <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
+                                <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Meal Rating<span style={{ color: 'red' }}>*</span></h3>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
+                                    {[1, 2, 3, 4, 5].map(star => (
+                                        <Star
+                                            key={star}
+                                            size={32}
+                                            onClick={() => setRating(star)}
+                                            color={colors.secondary}
+                                            fill={rating >= star ? colors.secondary : "none"}
+                                            cursor="pointer"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
+
+                            {/* Meal Eating Speed */}
+                            <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
+                                <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Meal Eating Speed<span style={{ color: 'red' }}>*</span></h3>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.xl, marginTop: spacing.md, flexWrap: 'wrap' }}>
+                                    {['5 minutes', '10 minutes', '20 minutes'].map(s => (
+                                        <div key={s} onClick={() => setSpeed(s)} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                            {speed === s ? <CheckCircle2 size={20} color={colors.green} /> : <Circle size={20} color="#ccc" />}
+                                            <span style={{ fontSize: fontSize.sm }}>{s}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <hr style={{ border: 0, borderTop: '1px solid #ddd', width: '100%', marginBottom: spacing.xl }} />
+
+                            {/* Comment */}
+                            <div style={{ textAlign: 'center', marginBottom: spacing.xl }}>
+                                <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: '#333' }}>Comment</h3>
+                                <textarea
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    placeholder="Comments about your meal"
+                                    style={{
+                                        width: '100%',
+                                        marginTop: spacing.sm,
+                                        padding: spacing.md,
+                                        border: '1px solid #ddd',
+                                        borderRadius: '4px',
+                                        minHeight: '80px',
+                                        fontSize: fontSize.sm
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Footer - Fixed at bottom, under chatbot */}
+                        <div style={{
+                            position: 'fixed',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            backgroundColor: 'white',
+                            borderTop: '2px solid black',
+                            padding: spacing.lg,
+                            zIndex: 201,
+                            display: 'flex',
+                            gap: spacing.md,
+                            paddingBottom: '24px' // Extra padding to be above chatbot button
+                        }}>
+                            <button
+                                onClick={handleAddMeal}
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: colors.green,
+                                    color: 'white',
+                                    padding: '12px 24px',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontWeight: 'bold',
+                                    fontSize: fontSize.base,
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Add Meal
+                            </button>
+                            <button
+                                onClick={() => setShowLogMealPopup(false)}
+                                style={{
+                                    flex: 1,
+                                    backgroundColor: colors.gray,
+                                    color: 'white',
+                                    padding: '12px 24px',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontWeight: 'bold',
+                                    fontSize: fontSize.base,
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <Link href="/" style={{ textDecoration: 'none', flex: 1 }}>
+                                <button style={{
+                                    width: '100%',
+                                    backgroundColor: colors.black,
+                                    color: 'white',
+                                    padding: '12px 24px',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontWeight: 'bold',
+                                    fontSize: fontSize.base,
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: spacing.xs
+                                }}>
+                                    <Home size={20} />
+                                    Home
+                                </button>
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
+                {/* Breakfast Full-Screen Popup */}
+                {showBreakfastPopup && (
+                    <div style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'white',
+                        zIndex: 200,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden'
+                    }}>
+                        {/* Header */}
+                        <Navbar customTitle="Breakfast" />
+
+                        {/* Scrollable Content */}
+                        <div style={{
+                            flex: 1,
+                            overflowY: 'auto',
+                            padding: spacing.lg,
+                            paddingBottom: '140px' // Space for footer
+                        }}>
+                            <h3 style={{
+                                fontSize: fontSize.lg,
+                                fontWeight: 'bold',
+                                color: '#333',
+                                marginBottom: spacing.md,
+                                textAlign: 'center'
+                            }}>
+                                Select Breakfast Items
+                            </h3>
+
+                            {/* Sort Buttons */}
+                            <div style={{
+                                display: 'flex',
+                                gap: spacing.sm,
+                                marginBottom: spacing.lg,
+                                justifyContent: 'center'
+                            }}>
+                                <button
+                                    onClick={() => setBreakfastSortMode('like')}
+                                    style={{
+                                        padding: '10px',
+                                        backgroundColor: breakfastSortMode === 'like' ? colors.secondary : colors.black,
+                                        color: colors.white,
+                                        border: 'none',
+                                        borderRadius: '9999px',
+                                        fontSize: '14pt',
+                                        fontWeight: '700',
+                                        cursor: 'pointer',
+                                        minWidth: '80px'
+                                    }}
+                                >
+                                    Like
+                                </button>
+                                <button
+                                    onClick={() => setBreakfastSortMode('abc')}
+                                    style={{
+                                        padding: '10px',
+                                        backgroundColor: breakfastSortMode === 'abc' ? colors.secondary : colors.black,
+                                        color: colors.white,
+                                        border: 'none',
+                                        borderRadius: '9999px',
+                                        fontSize: '14pt',
+                                        fontWeight: '700',
+                                        cursor: 'pointer',
+                                        minWidth: '80px'
+                                    }}
+                                >
+                                    ABC
+                                </button>
+                                <button
+                                    onClick={() => setBreakfastSortMode('calories')}
+                                    style={{
+                                        padding: '10px',
+                                        backgroundColor: breakfastSortMode === 'calories' ? colors.secondary : colors.black,
+                                        color: colors.white,
+                                        border: 'none',
+                                        borderRadius: '9999px',
+                                        fontSize: '14pt',
+                                        fontWeight: '700',
+                                        cursor: 'pointer',
+                                        minWidth: '100px'
+                                    }}
+                                >
+                                    Calories
+                                </button>
+                            </div>
+
+                            {/* Breakfast Items List */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+                                {getSortedBreakfastItems().map((item) => {
+                                    const isSelected = selectedBreakfastItems.includes(item.name);
+                                    return (
+                                        <div
+                                            key={item.name}
+                                            onClick={() => toggleBreakfastItem(item.name)}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: spacing.md,
+                                                backgroundColor: isSelected ? colors.primaryTint : 'white',
+                                                border: `2px solid ${isSelected ? colors.secondary : '#ddd'}`,
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
+                                                {isSelected ? (
+                                                    <CheckCircle2 size={24} color={colors.green} />
+                                                ) : (
+                                                    <Circle size={24} color="#ccc" />
+                                                )}
+                                                <span style={{
+                                                    fontSize: fontSize.base,
+                                                    fontWeight: isSelected ? 'bold' : 'normal'
+                                                }}>
+                                                    {item.name}
+                                                </span>
+                                            </div>
+                                            <span style={{
+                                                fontSize: fontSize.base,
+                                                fontWeight: 'bold',
+                                                color: colors.secondary
+                                            }}>
+                                                {item.calories} cal
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Footer - Fixed at bottom */}
+                        <div style={{
+                            position: 'fixed',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            backgroundColor: 'white',
+                            borderTop: '2px solid black',
+                            padding: spacing.lg,
+                            zIndex: 201,
+                            paddingBottom: '24px'
+                        }}>
+                            {/* Mood and Total Calories - Same Line */}
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: spacing.md,
+                                padding: spacing.md,
+                                backgroundColor: colors.primaryTint,
+                                borderRadius: '8px',
+                                border: '2px solid black'
+                            }}>
+                                {/* Mood Selection */}
+                                <div style={{
+                                    display: 'flex',
+                                    gap: spacing.md
+                                }}>
+                                    {[
+                                        { name: 'Tired', icon: Frown },
+                                        { name: 'Neutral', icon: Meh },
+                                        { name: 'Happy', icon: Smile }
+                                    ].map(m => (
+                                        <div
+                                            key={m.name}
+                                            onClick={() => setBreakfastMood(m.name)}
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                cursor: 'pointer',
+                                                opacity: breakfastMood === m.name ? 1 : 0.6,
+                                                transition: 'opacity 0.2s'
+                                            }}
+                                        >
+                                            {breakfastMood === m.name ? (
+                                                <CheckCircle2 size={30} color={colors.green} />
+                                            ) : (
+                                                <Circle size={30} color="#ccc" />
+                                            )}
+                                            <span style={{
+                                                fontSize: fontSize.xs,
+                                                marginTop: '2px',
+                                                fontWeight: breakfastMood === m.name ? 'bold' : 'normal'
+                                            }}>
+                                                {m.name}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Total Calories */}
+                                <div style={{ textAlign: 'center' }}>
+                                    <p style={{ fontSize: fontSize.xs, color: colors.gray, margin: 0 }}>Total Calories</p>
+                                    <p style={{ fontSize: fontSize.xxl, fontWeight: 'bold', margin: 0, color: colors.secondary }}>
+                                        {calculateBreakfastCalories()}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
                             <div style={{
                                 display: 'flex',
                                 gap: spacing.md
                             }}>
-                                {[
-                                    { name: 'Tired', icon: Frown },
-                                    { name: 'Neutral', icon: Meh },
-                                    { name: 'Happy', icon: Smile }
-                                ].map(m => (
-                                    <div
-                                        key={m.name}
-                                        onClick={() => setBreakfastMood(m.name)}
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            cursor: 'pointer',
-                                            opacity: breakfastMood === m.name ? 1 : 0.6,
-                                            transition: 'opacity 0.2s'
-                                        }}
-                                    >
-                                        {breakfastMood === m.name ? (
-                                            <CheckCircle2 size={30} color={colors.green} />
-                                        ) : (
-                                            <Circle size={30} color="#ccc" />
-                                        )}
-                                        <span style={{
-                                            fontSize: fontSize.xs,
-                                            marginTop: '2px',
-                                            fontWeight: breakfastMood === m.name ? 'bold' : 'normal'
-                                        }}>
-                                            {m.name}
+                                <button
+                                    onClick={handleAddBreakfast}
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: (selectedBreakfastItems.length > 0 || breakfastMood) ? colors.blue : colors.black,
+                                        color: 'white',
+                                        padding: '10px',
+                                        border: 'none',
+                                        borderRadius: '9999px',
+                                        fontWeight: '700',
+                                        fontSize: '14pt',
+                                        cursor: 'pointer',
+                                        transition: 'background-color 0.3s ease'
+                                    }}
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowBreakfastPopup(false);
+                                        setSelectedBreakfastItems([]);
+                                        setBreakfastMood('');
+                                    }}
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: colors.black,
+                                        color: 'white',
+                                        padding: '10px',
+                                        border: 'none',
+                                        borderRadius: '9999px',
+                                        fontWeight: '700',
+                                        fontSize: '14pt',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Back
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Lunch Full-Screen Popup */}
+                {showLunchPopup && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'white',
+                        zIndex: 200,
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}>
+                        <Navbar customTitle="Lunch" />
+                        <div style={{
+                            flex: 1,
+                            overflowY: 'auto',
+                            padding: spacing.lg,
+                            paddingBottom: '180px'
+                        }}>
+                            {LUNCH_ITEMS.map((item) => (
+                                <div
+                                    key={item.name}
+                                    onClick={() => toggleLunchItem(item.name)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: spacing.md,
+                                        marginBottom: spacing.sm,
+                                        backgroundColor: selectedLunchItems.includes(item.name) ? colors.primaryTint : colors.white,
+                                        border: `2px solid ${selectedLunchItems.includes(item.name) ? colors.secondary : '#ddd'}`,
+                                        borderRadius: '8px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                                        {selectedLunchItems.includes(item.name) ?
+                                            <CheckCircle2 size={24} color={colors.secondary} /> :
+                                            <Circle size={24} color="#ccc" />
+                                        }
+                                        <span style={{ fontSize: '14pt', fontWeight: selectedLunchItems.includes(item.name) ? 'bold' : 'normal' }}>
+                                            {item.name}
                                         </span>
                                     </div>
-                                ))}
-                            </div>
-
-                            {/* Total Calories */}
-                            <div style={{ textAlign: 'center' }}>
-                                <p style={{ fontSize: fontSize.xs, color: colors.gray, margin: 0 }}>Total Calories</p>
-                                <p style={{ fontSize: fontSize.xxl, fontWeight: 'bold', margin: 0, color: colors.secondary }}>
-                                    {calculateBreakfastCalories()}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div style={{
-                            display: 'flex',
-                            gap: spacing.md
-                        }}>
-                            <button
-                                onClick={handleAddBreakfast}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: (selectedBreakfastItems.length > 0 || breakfastMood) ? colors.blue : colors.black,
-                                    color: 'white',
-                                    padding: '10px',
-                                    border: 'none',
-                                    borderRadius: '9999px',
-                                    fontWeight: '700',
-                                    fontSize: '14pt',
-                                    cursor: 'pointer',
-                                    transition: 'background-color 0.3s ease'
-                                }}
-                            >
-                                Save
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setShowBreakfastPopup(false);
-                                    setSelectedBreakfastItems([]);
-                                    setBreakfastMood('');
-                                }}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: colors.black,
-                                    color: 'white',
-                                    padding: '10px',
-                                    border: 'none',
-                                    borderRadius: '9999px',
-                                    fontWeight: '700',
-                                    fontSize: '14pt',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                Back
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Lunch Full-Screen Popup */}
-            {showLunchPopup && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'white',
-                    zIndex: 200,
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}>
-                    <Navbar customTitle="Lunch" />
-                    <div style={{
-                        flex: 1,
-                        overflowY: 'auto',
-                        padding: spacing.lg,
-                        paddingBottom: '180px'
-                    }}>
-                        {LUNCH_ITEMS.map((item) => (
-                            <div
-                                key={item.name}
-                                onClick={() => toggleLunchItem(item.name)}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    padding: spacing.md,
-                                    marginBottom: spacing.sm,
-                                    backgroundColor: selectedLunchItems.includes(item.name) ? colors.primaryTint : colors.white,
-                                    border: `2px solid ${selectedLunchItems.includes(item.name) ? colors.secondary : '#ddd'}`,
-                                    borderRadius: '8px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-                                    {selectedLunchItems.includes(item.name) ?
-                                        <CheckCircle2 size={24} color={colors.secondary} /> :
-                                        <Circle size={24} color="#ccc" />
-                                    }
-                                    <span style={{ fontSize: '14pt', fontWeight: selectedLunchItems.includes(item.name) ? 'bold' : 'normal' }}>
-                                        {item.name}
+                                    <span style={{ fontSize: '12pt', color: colors.gray }}>
+                                        {item.calories} cal
                                     </span>
                                 </div>
-                                <span style={{ fontSize: '12pt', color: colors.gray }}>
-                                    {item.calories} cal
-                                </span>
+                            ))}
+                        </div>
+                        <div style={{
+                            position: 'fixed',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            backgroundColor: 'white',
+                            borderTop: '2px solid black',
+                            padding: spacing.lg,
+                            zIndex: 201,
+                            paddingBottom: '24px'
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: spacing.md,
+                                padding: spacing.md,
+                                backgroundColor: colors.primaryTint,
+                                borderRadius: '8px',
+                                border: '2px solid black'
+                            }}>
+                                <div style={{ display: 'flex', gap: spacing.md }}>
+                                    {['Tired', 'Neutral', 'Happy'].map((m) => (
+                                        <div
+                                            key={m}
+                                            onClick={() => setLunchMood(m)}
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                cursor: 'pointer',
+                                                opacity: lunchMood === m ? 1 : 0.5
+                                            }}
+                                        >
+                                            {m === 'Tired' && <Frown size={30} color={colors.secondary} />}
+                                            {m === 'Neutral' && <Meh size={30} color={colors.secondary} />}
+                                            {m === 'Happy' && <Smile size={30} color={colors.secondary} />}
+                                            <span style={{ fontSize: '12pt', marginTop: spacing.xs }}>{m}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <p style={{ fontSize: '12pt', color: colors.gray, margin: 0 }}>Total Calories</p>
+                                    <p style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0, color: colors.secondary }}>
+                                        {calculateLunchCalories()}
+                                    </p>
+                                </div>
                             </div>
-                        ))}
+                            <div style={{ display: 'flex', gap: spacing.md }}>
+                                <button
+                                    onClick={handleAddLunch}
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: (selectedLunchItems.length > 0 || lunchMood) ? colors.blue : colors.black,
+                                        color: 'white',
+                                        padding: '10px',
+                                        border: 'none',
+                                        borderRadius: '9999px',
+                                        fontWeight: '700',
+                                        fontSize: '14pt',
+                                        cursor: 'pointer',
+                                        transition: 'background-color 0.3s ease'
+                                    }}
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowLunchPopup(false);
+                                        setSelectedLunchItems([]);
+                                        setLunchMood('');
+                                    }}
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: colors.black,
+                                        color: 'white',
+                                        padding: '10px',
+                                        border: 'none',
+                                        borderRadius: '9999px',
+                                        fontWeight: '700',
+                                        fontSize: '14pt',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Back
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                )}
+
+                {/* Dinner Full-Screen Popup */}
+                {showDinnerPopup && (
                     <div style={{
                         position: 'fixed',
-                        bottom: 0,
+                        top: 0,
                         left: 0,
                         right: 0,
+                        bottom: 0,
                         backgroundColor: 'white',
-                        borderTop: '2px solid black',
-                        padding: spacing.lg,
-                        zIndex: 201,
-                        paddingBottom: '24px'
+                        zIndex: 200,
+                        display: 'flex',
+                        flexDirection: 'column'
                     }}>
+                        <Navbar customTitle="Dinner" />
                         <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: spacing.md,
-                            padding: spacing.md,
-                            backgroundColor: colors.primaryTint,
-                            borderRadius: '8px',
-                            border: '2px solid black'
+                            flex: 1,
+                            overflowY: 'auto',
+                            padding: spacing.lg,
+                            paddingBottom: '180px'
                         }}>
-                            <div style={{ display: 'flex', gap: spacing.md }}>
-                                {['Tired', 'Neutral', 'Happy'].map((m) => (
-                                    <div
-                                        key={m}
-                                        onClick={() => setLunchMood(m)}
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            cursor: 'pointer',
-                                            opacity: lunchMood === m ? 1 : 0.5
-                                        }}
-                                    >
-                                        {m === 'Tired' && <Frown size={30} color={colors.secondary} />}
-                                        {m === 'Neutral' && <Meh size={30} color={colors.secondary} />}
-                                        {m === 'Happy' && <Smile size={30} color={colors.secondary} />}
-                                        <span style={{ fontSize: '12pt', marginTop: spacing.xs }}>{m}</span>
+                            {DINNER_ITEMS.map((item) => (
+                                <div
+                                    key={item.name}
+                                    onClick={() => toggleDinnerItem(item.name)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: spacing.md,
+                                        marginBottom: spacing.sm,
+                                        backgroundColor: selectedDinnerItems.includes(item.name) ? colors.primaryTint : colors.white,
+                                        border: `2px solid ${selectedDinnerItems.includes(item.name) ? colors.secondary : '#ddd'}`,
+                                        borderRadius: '8px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                                        {selectedDinnerItems.includes(item.name) ?
+                                            <CheckCircle2 size={24} color={colors.secondary} /> :
+                                            <Circle size={24} color="#ccc" />
+                                        }
+                                        <span style={{ fontSize: '14pt', fontWeight: selectedDinnerItems.includes(item.name) ? 'bold' : 'normal' }}>
+                                            {item.name}
+                                        </span>
                                     </div>
-                                ))}
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <p style={{ fontSize: '12pt', color: colors.gray, margin: 0 }}>Total Calories</p>
-                                <p style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0, color: colors.secondary }}>
-                                    {calculateLunchCalories()}
-                                </p>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: spacing.md }}>
-                            <button
-                                onClick={handleAddLunch}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: (selectedLunchItems.length > 0 || lunchMood) ? colors.blue : colors.black,
-                                    color: 'white',
-                                    padding: '10px',
-                                    border: 'none',
-                                    borderRadius: '9999px',
-                                    fontWeight: '700',
-                                    fontSize: '14pt',
-                                    cursor: 'pointer',
-                                    transition: 'background-color 0.3s ease'
-                                }}
-                            >
-                                Save
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setShowLunchPopup(false);
-                                    setSelectedLunchItems([]);
-                                    setLunchMood('');
-                                }}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: colors.black,
-                                    color: 'white',
-                                    padding: '10px',
-                                    border: 'none',
-                                    borderRadius: '9999px',
-                                    fontWeight: '700',
-                                    fontSize: '14pt',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                Back
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Dinner Full-Screen Popup */}
-            {showDinnerPopup && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'white',
-                    zIndex: 200,
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}>
-                    <Navbar customTitle="Dinner" />
-                    <div style={{
-                        flex: 1,
-                        overflowY: 'auto',
-                        padding: spacing.lg,
-                        paddingBottom: '180px'
-                    }}>
-                        {DINNER_ITEMS.map((item) => (
-                            <div
-                                key={item.name}
-                                onClick={() => toggleDinnerItem(item.name)}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    padding: spacing.md,
-                                    marginBottom: spacing.sm,
-                                    backgroundColor: selectedDinnerItems.includes(item.name) ? colors.primaryTint : colors.white,
-                                    border: `2px solid ${selectedDinnerItems.includes(item.name) ? colors.secondary : '#ddd'}`,
-                                    borderRadius: '8px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-                                    {selectedDinnerItems.includes(item.name) ?
-                                        <CheckCircle2 size={24} color={colors.secondary} /> :
-                                        <Circle size={24} color="#ccc" />
-                                    }
-                                    <span style={{ fontSize: '14pt', fontWeight: selectedDinnerItems.includes(item.name) ? 'bold' : 'normal' }}>
-                                        {item.name}
+                                    <span style={{ fontSize: '12pt', color: colors.gray }}>
+                                        {item.calories} cal
                                     </span>
                                 </div>
-                                <span style={{ fontSize: '12pt', color: colors.gray }}>
-                                    {item.calories} cal
-                                </span>
+                            ))}
+                        </div>
+                        <div style={{
+                            position: 'fixed',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            backgroundColor: 'white',
+                            borderTop: '2px solid black',
+                            padding: spacing.lg,
+                            zIndex: 201,
+                            paddingBottom: '24px'
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: spacing.md,
+                                padding: spacing.md,
+                                backgroundColor: colors.primaryTint,
+                                borderRadius: '8px',
+                                border: '2px solid black'
+                            }}>
+                                <div style={{ display: 'flex', gap: spacing.md }}>
+                                    {['Tired', 'Neutral', 'Happy'].map((m) => (
+                                        <div
+                                            key={m}
+                                            onClick={() => setDinnerMood(m)}
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                cursor: 'pointer',
+                                                opacity: dinnerMood === m ? 1 : 0.5
+                                            }}
+                                        >
+                                            {m === 'Tired' && <Frown size={30} color={colors.secondary} />}
+                                            {m === 'Neutral' && <Meh size={30} color={colors.secondary} />}
+                                            {m === 'Happy' && <Smile size={30} color={colors.secondary} />}
+                                            <span style={{ fontSize: '12pt', marginTop: spacing.xs }}>{m}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <p style={{ fontSize: '12pt', color: colors.gray, margin: 0 }}>Total Calories</p>
+                                    <p style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0, color: colors.secondary }}>
+                                        {calculateDinnerCalories()}
+                                    </p>
+                                </div>
                             </div>
-                        ))}
+                            <div style={{ display: 'flex', gap: spacing.md }}>
+                                <button
+                                    onClick={handleAddDinner}
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: (selectedDinnerItems.length > 0 || dinnerMood) ? colors.blue : colors.black,
+                                        color: 'white',
+                                        padding: '10px',
+                                        border: 'none',
+                                        borderRadius: '9999px',
+                                        fontWeight: '700',
+                                        fontSize: '14pt',
+                                        cursor: 'pointer',
+                                        transition: 'background-color 0.3s ease'
+                                    }}
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowDinnerPopup(false);
+                                        setSelectedDinnerItems([]);
+                                        setDinnerMood('');
+                                    }}
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: colors.black,
+                                        color: 'white',
+                                        padding: '10px',
+                                        border: 'none',
+                                        borderRadius: '9999px',
+                                        fontWeight: '700',
+                                        fontSize: '14pt',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Back
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                )}
+
+                {/* Snack Full-Screen Popup */}
+                {showSnackPopup && (
                     <div style={{
                         position: 'fixed',
-                        bottom: 0,
+                        top: 0,
                         left: 0,
                         right: 0,
+                        bottom: 0,
                         backgroundColor: 'white',
-                        borderTop: '2px solid black',
-                        padding: spacing.lg,
-                        zIndex: 201,
-                        paddingBottom: '24px'
+                        zIndex: 200,
+                        display: 'flex',
+                        flexDirection: 'column'
                     }}>
+                        <Navbar customTitle="Snack" />
                         <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: spacing.md,
-                            padding: spacing.md,
-                            backgroundColor: colors.primaryTint,
-                            borderRadius: '8px',
-                            border: '2px solid black'
+                            flex: 1,
+                            overflowY: 'auto',
+                            padding: spacing.lg,
+                            paddingBottom: '180px'
                         }}>
-                            <div style={{ display: 'flex', gap: spacing.md }}>
-                                {['Tired', 'Neutral', 'Happy'].map((m) => (
-                                    <div
-                                        key={m}
-                                        onClick={() => setDinnerMood(m)}
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            cursor: 'pointer',
-                                            opacity: dinnerMood === m ? 1 : 0.5
-                                        }}
-                                    >
-                                        {m === 'Tired' && <Frown size={30} color={colors.secondary} />}
-                                        {m === 'Neutral' && <Meh size={30} color={colors.secondary} />}
-                                        {m === 'Happy' && <Smile size={30} color={colors.secondary} />}
-                                        <span style={{ fontSize: '12pt', marginTop: spacing.xs }}>{m}</span>
+                            {SNACK_ITEMS.map((item) => (
+                                <div
+                                    key={item.name}
+                                    onClick={() => toggleSnackItem(item.name)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: spacing.md,
+                                        marginBottom: spacing.sm,
+                                        backgroundColor: selectedSnackItems.includes(item.name) ? colors.primaryTint : colors.white,
+                                        border: `2px solid ${selectedSnackItems.includes(item.name) ? colors.secondary : '#ddd'}`,
+                                        borderRadius: '8px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                                        {selectedSnackItems.includes(item.name) ?
+                                            <CheckCircle2 size={24} color={colors.secondary} /> :
+                                            <Circle size={24} color="#ccc" />
+                                        }
+                                        <span style={{ fontSize: '14pt', fontWeight: selectedSnackItems.includes(item.name) ? 'bold' : 'normal' }}>
+                                            {item.name}
+                                        </span>
                                     </div>
-                                ))}
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <p style={{ fontSize: '12pt', color: colors.gray, margin: 0 }}>Total Calories</p>
-                                <p style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0, color: colors.secondary }}>
-                                    {calculateDinnerCalories()}
-                                </p>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: spacing.md }}>
-                            <button
-                                onClick={handleAddDinner}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: (selectedDinnerItems.length > 0 || dinnerMood) ? colors.blue : colors.black,
-                                    color: 'white',
-                                    padding: '10px',
-                                    border: 'none',
-                                    borderRadius: '9999px',
-                                    fontWeight: '700',
-                                    fontSize: '14pt',
-                                    cursor: 'pointer',
-                                    transition: 'background-color 0.3s ease'
-                                }}
-                            >
-                                Save
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setShowDinnerPopup(false);
-                                    setSelectedDinnerItems([]);
-                                    setDinnerMood('');
-                                }}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: colors.black,
-                                    color: 'white',
-                                    padding: '10px',
-                                    border: 'none',
-                                    borderRadius: '9999px',
-                                    fontWeight: '700',
-                                    fontSize: '14pt',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                Back
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Snack Full-Screen Popup */}
-            {showSnackPopup && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'white',
-                    zIndex: 200,
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}>
-                    <Navbar customTitle="Snack" />
-                    <div style={{
-                        flex: 1,
-                        overflowY: 'auto',
-                        padding: spacing.lg,
-                        paddingBottom: '180px'
-                    }}>
-                        {SNACK_ITEMS.map((item) => (
-                            <div
-                                key={item.name}
-                                onClick={() => toggleSnackItem(item.name)}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    padding: spacing.md,
-                                    marginBottom: spacing.sm,
-                                    backgroundColor: selectedSnackItems.includes(item.name) ? colors.primaryTint : colors.white,
-                                    border: `2px solid ${selectedSnackItems.includes(item.name) ? colors.secondary : '#ddd'}`,
-                                    borderRadius: '8px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-                                    {selectedSnackItems.includes(item.name) ?
-                                        <CheckCircle2 size={24} color={colors.secondary} /> :
-                                        <Circle size={24} color="#ccc" />
-                                    }
-                                    <span style={{ fontSize: '14pt', fontWeight: selectedSnackItems.includes(item.name) ? 'bold' : 'normal' }}>
-                                        {item.name}
+                                    <span style={{ fontSize: '12pt', color: colors.gray }}>
+                                        {item.calories} cal
                                     </span>
                                 </div>
-                                <span style={{ fontSize: '12pt', color: colors.gray }}>
-                                    {item.calories} cal
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                    <div style={{
-                        position: 'fixed',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        backgroundColor: 'white',
-                        borderTop: '2px solid black',
-                        padding: spacing.lg,
-                        zIndex: 201,
-                        paddingBottom: '24px'
-                    }}>
+                            ))}
+                        </div>
                         <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: spacing.md,
-                            padding: spacing.md,
-                            backgroundColor: colors.primaryTint,
-                            borderRadius: '8px',
-                            border: '2px solid black'
+                            position: 'fixed',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            backgroundColor: 'white',
+                            borderTop: '2px solid black',
+                            padding: spacing.lg,
+                            zIndex: 201,
+                            paddingBottom: '24px'
                         }}>
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: spacing.md,
+                                padding: spacing.md,
+                                backgroundColor: colors.primaryTint,
+                                borderRadius: '8px',
+                                border: '2px solid black'
+                            }}>
+                                <div style={{ display: 'flex', gap: spacing.md }}>
+                                    {['Tired', 'Neutral', 'Happy'].map((m) => (
+                                        <div
+                                            key={m}
+                                            onClick={() => setSnackMood(m)}
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                cursor: 'pointer',
+                                                opacity: snackMood === m ? 1 : 0.5
+                                            }}
+                                        >
+                                            {m === 'Tired' && <Frown size={30} color={colors.secondary} />}
+                                            {m === 'Neutral' && <Meh size={30} color={colors.secondary} />}
+                                            {m === 'Happy' && <Smile size={30} color={colors.secondary} />}
+                                            <span style={{ fontSize: '12pt', marginTop: spacing.xs }}>{m}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div style={{ textAlign: 'center' }}>
+                                    <p style={{ fontSize: '12pt', color: colors.gray, margin: 0 }}>Total Calories</p>
+                                    <p style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0, color: colors.secondary }}>
+                                        {calculateSnackCalories()}
+                                    </p>
+                                </div>
+                            </div>
                             <div style={{ display: 'flex', gap: spacing.md }}>
-                                {['Tired', 'Neutral', 'Happy'].map((m) => (
-                                    <div
-                                        key={m}
-                                        onClick={() => setSnackMood(m)}
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            cursor: 'pointer',
-                                            opacity: snackMood === m ? 1 : 0.5
-                                        }}
-                                    >
-                                        {m === 'Tired' && <Frown size={30} color={colors.secondary} />}
-                                        {m === 'Neutral' && <Meh size={30} color={colors.secondary} />}
-                                        {m === 'Happy' && <Smile size={30} color={colors.secondary} />}
-                                        <span style={{ fontSize: '12pt', marginTop: spacing.xs }}>{m}</span>
-                                    </div>
-                                ))}
+                                <button
+                                    onClick={handleAddSnack}
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: (selectedSnackItems.length > 0 || snackMood) ? colors.blue : colors.black,
+                                        color: 'white',
+                                        padding: '10px',
+                                        border: 'none',
+                                        borderRadius: '9999px',
+                                        fontWeight: '700',
+                                        fontSize: '14pt',
+                                        cursor: 'pointer',
+                                        transition: 'background-color 0.3s ease'
+                                    }}
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowSnackPopup(false);
+                                        setSelectedSnackItems([]);
+                                        setSnackMood('');
+                                    }}
+                                    style={{
+                                        flex: 1,
+                                        backgroundColor: colors.black,
+                                        color: 'white',
+                                        padding: '10px',
+                                        border: 'none',
+                                        borderRadius: '9999px',
+                                        fontWeight: '700',
+                                        fontSize: '14pt',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Back
+                                </button>
                             </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <p style={{ fontSize: '12pt', color: colors.gray, margin: 0 }}>Total Calories</p>
-                                <p style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0, color: colors.secondary }}>
-                                    {calculateSnackCalories()}
-                                </p>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: spacing.md }}>
-                            <button
-                                onClick={handleAddSnack}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: (selectedSnackItems.length > 0 || snackMood) ? colors.blue : colors.black,
-                                    color: 'white',
-                                    padding: '10px',
-                                    border: 'none',
-                                    borderRadius: '9999px',
-                                    fontWeight: '700',
-                                    fontSize: '14pt',
-                                    cursor: 'pointer',
-                                    transition: 'background-color 0.3s ease'
-                                }}
-                            >
-                                Save
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setShowSnackPopup(false);
-                                    setSelectedSnackItems([]);
-                                    setSnackMood('');
-                                }}
-                                style={{
-                                    flex: 1,
-                                    backgroundColor: colors.black,
-                                    color: 'white',
-                                    padding: '10px',
-                                    border: 'none',
-                                    borderRadius: '9999px',
-                                    fontWeight: '700',
-                                    fontSize: '14pt',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                Back
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </ProtectedRoute>
     );
 }
