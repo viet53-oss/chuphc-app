@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { Apple, Home, Camera, Coffee, Utensils, Cookie, Smile, Frown, Meh, Star, CheckCircle2, Circle } from 'lucide-react';
+import { Apple, Home, Camera, Coffee, Utensils, Cookie, Smile, Frown, Meh, Star, CheckCircle2, Circle, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { colors, spacing, fontSize } from '@/lib/design-system';
@@ -117,7 +117,7 @@ const SNACK_ITEMS = [
 ];
 
 export default function NutritionPage() {
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth();
     const [dailyCalories, setDailyCalories] = useState(0);
     const [mealsLogged, setMealsLogged] = useState(0);
     const [showLogMealPopup, setShowLogMealPopup] = useState(false);
@@ -136,6 +136,7 @@ export default function NutritionPage() {
     const [breakfastSortMode, setBreakfastSortMode] = useState<'like' | 'abc' | 'calories'>('like');
     const [breakfastItemFrequency, setBreakfastItemFrequency] = useState<Record<string, number>>({});
     const [mealLog, setMealLog] = useState<Array<{
+        id: string;
         time: string;
         type: string;
         items: string[];
@@ -170,6 +171,7 @@ export default function NutritionPage() {
                     const notes = log.notes ? JSON.parse(log.notes) : {};
 
                     return {
+                        id: log.id,
                         time: loggedTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
                         type: log.meal_type,
                         items: notes.items || [],
@@ -290,6 +292,7 @@ export default function NutritionPage() {
             // Update local state
             const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             setMealLog(prev => [{
+                id: 'temp-' + Date.now(), // Temporary ID until reload
                 time: timeString,
                 type: 'Breakfast',
                 items: selectedBreakfastItems,
@@ -351,6 +354,7 @@ export default function NutritionPage() {
         if (!error) {
             const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             setMealLog(prev => [{
+                id: 'temp-' + Date.now(),
                 time: timeString,
                 type: 'Lunch',
                 items: selectedLunchItems,
@@ -404,6 +408,7 @@ export default function NutritionPage() {
         if (!error) {
             const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             setMealLog(prev => [{
+                id: 'temp-' + Date.now(),
                 time: timeString,
                 type: 'Dinner',
                 items: selectedDinnerItems,
@@ -457,6 +462,7 @@ export default function NutritionPage() {
         if (!error) {
             const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             setMealLog(prev => [{
+                id: 'temp-' + Date.now(),
                 time: timeString,
                 type: 'Snack',
                 items: selectedSnackItems,
@@ -474,6 +480,27 @@ export default function NutritionPage() {
     };
 
     const unselectedFoods = FOOD_ITEMS.filter(f => !selectedFoods.includes(f));
+
+    const handleDeleteMeal = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this meal log?')) return;
+
+        const { error } = await supabase
+            .from('nutrition_logs')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            alert('Error deleting meal: ' + error.message);
+        } else {
+            // Optimistic update
+            const deletedMeal = mealLog.find(m => m.id === id);
+            if (deletedMeal) {
+                setDailyCalories(prev => Math.max(0, prev - deletedMeal.calories));
+                setMealsLogged(prev => Math.max(0, prev - 1));
+                setMealLog(prev => prev.filter(m => m.id !== id));
+            }
+        }
+    };
 
     const handleAddMeal = () => {
         setMealsLogged(prev => prev + 1);
@@ -682,6 +709,22 @@ export default function NutritionPage() {
                                             <span style={{ fontSize: '16pt', fontWeight: 'bold', color: colors.secondary, marginLeft: 'auto' }}>
                                                 {meal.calories} cal
                                             </span>
+                                            {isAdmin && (
+                                                <button
+                                                    onClick={() => handleDeleteMeal(meal.id)}
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        marginLeft: '8px',
+                                                        padding: '4px',
+                                                        color: colors.red
+                                                    }}
+                                                    title="Delete Log (Admin Only)"
+                                                >
+                                                    <Trash2 size={20} />
+                                                </button>
+                                            )}
                                         </div>
                                         <div style={{ fontSize: '14pt', color: colors.gray, marginTop: spacing.xs }}>
                                             {meal.items.length > 0 ? meal.items.join(', ') : 'No items logged'}
