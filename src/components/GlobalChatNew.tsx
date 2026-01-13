@@ -109,6 +109,46 @@ export default function GlobalChat() {
         return true;
     };
 
+    const handleLocalQuery = (query: string, clientData: any): string => {
+        const lowerQuery = query.toLowerCase();
+
+        // Check nutrition data
+        if (clientData?.nutrition && clientData.nutrition.length > 0) {
+            // Questions like "did I have banana today?"
+            const foodMatch = lowerQuery.match(/(?:have|eat|ate)\s+(\w+)/);
+            if (foodMatch) {
+                const foodItem = foodMatch[1];
+                const found = clientData.nutrition.some((item: any) =>
+                    item.food_name?.toLowerCase().includes(foodItem)
+                );
+                return found
+                    ? `Yes, you had ${foodItem} today.`
+                    : `No, I don't see ${foodItem} in your nutrition log today.`;
+            }
+
+            // Questions like "what did I eat today?"
+            if (lowerQuery.includes('what did i eat') || lowerQuery.includes('what have i eaten')) {
+                const foods = clientData.nutrition.map((item: any) => item.food_name).filter(Boolean);
+                return foods.length > 0
+                    ? `Today you ate: ${foods.join(', ')}.`
+                    : "You haven't logged any food today.";
+            }
+        }
+
+        // Check exercise data
+        if (clientData?.exercise && clientData.exercise.length > 0) {
+            if (lowerQuery.includes('did i exercise') || lowerQuery.includes('did i work out')) {
+                const exercises = clientData.exercise.map((item: any) => item.exercise_name).filter(Boolean);
+                return exercises.length > 0
+                    ? `Yes, you did: ${exercises.join(', ')}.`
+                    : "You haven't logged any exercise today.";
+            }
+        }
+
+        // Default: couldn't answer locally
+        return '';
+    };
+
     const handleVoiceInput = async (text: string) => {
         if (!text.trim()) return;
 
@@ -142,8 +182,27 @@ export default function GlobalChat() {
                 console.log('[handleVoiceInput] Using local time response');
                 responseText = `It is currently ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`;
             }
+            // 3. Check for simple data queries (e.g., "did I have banana today?")
+            else if (lowerQuery.includes('did i') || lowerQuery.includes('have i') || lowerQuery.includes('what did i')) {
+                console.log('[handleVoiceInput] Attempting local data query');
+                responseText = handleLocalQuery(text, clientData);
+
+                // If local query couldn't answer, fall back to Gemini
+                if (!responseText) {
+                    console.log('[handleVoiceInput] Local query failed, falling back to Gemini');
+                    setIsProcessing(true);
+                    try {
+                        responseText = await getGeminiResponse(text, clientData);
+                        console.log('[handleVoiceInput] Gemini response received:', responseText.substring(0, 50));
+                    } catch (e) {
+                        console.error('[handleVoiceInput] Gemini error:', e);
+                        responseText = "I'm having trouble thinking right now. Please try again.";
+                    }
+                    setIsProcessing(false);
+                }
+            }
             else {
-                // 3. Fallback to Gemini AI for everything else (Health questions, summaries, small talk)
+                // 4. Fallback to Gemini AI for everything else (Health questions, summaries, small talk)
                 console.log('[handleVoiceInput] Calling Gemini API');
                 setIsProcessing(true); // Show processing state instead of listening
                 try {
