@@ -61,9 +61,12 @@ export default function Navbar({ customTitle }: { customTitle?: string }) {
                             onClick={handleAdminClick}
                             className="btn-logout"
                             title={isAdmin ? "Exit Admin Mode" : "Enter Admin Mode"}
-                            style={isAdmin ? { backgroundColor: '#d32f2f', color: 'white' } : {}}
+                            style={{
+                                padding: '10px',
+                                ...(isAdmin ? { backgroundColor: '#d32f2f', color: 'white' } : {})
+                            }}
                         >
-                            {isAdmin ? 'Admin' : 'Admin'}
+                            Admin
                         </button>
                     </div>
                 )}
@@ -121,12 +124,13 @@ export default function Navbar({ customTitle }: { customTitle?: string }) {
                         <button
                             onClick={submitAdminPassword}
                             style={{
-                                backgroundColor: '#2D5A27',
+                                backgroundColor: '#000000',
                                 color: 'white',
                                 border: 'none',
                                 padding: '10px',
-                                borderRadius: '6px',
-                                fontWeight: 'bold',
+                                borderRadius: '9999px',
+                                fontWeight: '700',
+                                fontSize: '14pt',
                                 cursor: 'pointer'
                             }}
                         >

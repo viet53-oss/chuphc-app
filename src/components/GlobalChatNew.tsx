@@ -16,6 +16,12 @@ export default function GlobalChat() {
     const [voiceEnabled, setVoiceEnabled] = useState(false);
     const { user } = useAuth();
     const recognitionRef = useRef<any>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to bottom (newest messages)
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [chatMessages]);
 
     // Load chat messages from Supabase
     useEffect(() => {
@@ -30,7 +36,7 @@ export default function GlobalChat() {
             .from('chat_messages')
             .select('*')
             .eq('user_id', user.id)
-            .order('created_at', { ascending: true });
+            .order('created_at', { ascending: true }); // Load in chronological order
 
         if (data) {
             const formattedMessages = data.map(msg => ({
@@ -56,108 +62,131 @@ export default function GlobalChat() {
     const handleVoiceInput = async (text: string) => {
         if (!text.trim()) return;
 
-        // Add user message
         const userMessage = { role: 'user', content: text };
         setChatMessages(prev => [...prev, userMessage]);
         await saveChatMessage('user', text);
 
-        // Fetch all client data for context
         const clientData = await fetchClientData();
 
-        // Simulate thinking delay
         setTimeout(async () => {
-            let responseText = generateResponseWithData(text, clientData);
+            let responseText = '';
+
+            const actionResult = await executeAction(text, clientData);
+
+            if (actionResult) {
+                responseText = actionResult;
+            } else {
+                responseText = generateResponseWithData(text, clientData);
+            }
 
             const botResponse = { role: 'bot', content: responseText };
             setChatMessages(prev => [...prev, botResponse]);
             await saveChatMessage('bot', botResponse.content);
 
-            // Speak the response if voice is enabled
             speakResponse(responseText);
         }, 1000);
+    };
+
+    const executeAction = async (query: string, data: any): Promise<string | null> => {
+        if (!user) return null;
+
+        const lowerQuery = query.toLowerCase();
+
+        // ADD/LOG actions
+        if (lowerQuery.includes('add') || lowerQuery.includes('log') || lowerQuery.includes('record')) {
+            if (lowerQuery.includes('meal') || lowerQuery.includes('food') || lowerQuery.includes('ate') || lowerQuery.includes('breakfast') || lowerQuery.includes('lunch') || lowerQuery.includes('dinner') || lowerQuery.includes('snack')) {
+                let mealType = 'Snack';
+                if (lowerQuery.includes('breakfast')) mealType = 'Breakfast';
+                else if (lowerQuery.includes('lunch')) mealType = 'Lunch';
+                else if (lowerQuery.includes('dinner')) mealType = 'Dinner';
+
+                const calorieMatch = query.match(/(\d+)\s*(cal|calorie)/i);
+                const calories = calorieMatch ? parseInt(calorieMatch[1]) : 0;
+
+                const { error } = await supabase.from('nutrition_logs').insert({
+                    user_id: user.id,
+                    meal_type: mealType,
+                    calories: calories,
+                    notes: JSON.stringify({ items: [query] }),
+                    logged_at: new Date().toISOString()
+                });
+
+                if (error) return `Sorry, I couldn't log that meal: ${error.message}`;
+                return `✅ Successfully logged ${mealType} with ${calories} calories!`;
+            }
+
+            if (lowerQuery.includes('goal')) {
+                const { error } = await supabase.from('goals').insert({
+                    user_id: user.id,
+                    category: 'General',
+                    title: query.replace(/add|log|record|goal/gi, '').trim(),
+                    start_date: new Date().toISOString().split('T')[0]
+                });
+
+                if (error) return `Sorry, I couldn't create that goal: ${error.message}`;
+                return `✅ Goal created successfully!`;
+            }
+        }
+
+        // DELETE/REMOVE actions
+        if (lowerQuery.includes('delete') || lowerQuery.includes('remove')) {
+            if (lowerQuery.includes('last') || lowerQuery.includes('recent')) {
+                if (lowerQuery.includes('meal') || lowerQuery.includes('food')) {
+                    const lastMeal = data.nutrition?.allLogs?.[0];
+                    if (lastMeal) {
+                        const { error } = await supabase.from('nutrition_logs').delete().eq('id', lastMeal.id);
+                        if (error) return `Sorry, I couldn't delete that: ${error.message}`;
+                        return `✅ Deleted last meal (${lastMeal.meal_type}, ${lastMeal.calories} calories)`;
+                    }
+                    return "You don't have any meals to delete.";
+                }
+
+                if (lowerQuery.includes('activity') || lowerQuery.includes('workout')) {
+                    const lastActivity = data.activity?.[0];
+                    if (lastActivity) {
+                        const { error } = await supabase.from('activity_logs').delete().eq('id', lastActivity.id);
+                        if (error) return `Sorry, I couldn't delete that: ${error.message}`;
+                        return `✅ Deleted last activity`;
+                    }
+                    return "You don't have any activities to delete.";
+                }
+            }
+        }
+
+        // UPDATE actions
+        if (lowerQuery.includes('update') || lowerQuery.includes('change') || lowerQuery.includes('edit') || lowerQuery.includes('complete')) {
+            if (lowerQuery.includes('goal')) {
+                const lastGoal = data.goals?.find((g: any) => !g.completed);
+                if (lastGoal) {
+                    const { error } = await supabase.from('goals').update({ completed: true, completed_at: new Date().toISOString() }).eq('id', lastGoal.id);
+                    if (error) return `Sorry, I couldn't update that: ${error.message}`;
+                    return `✅ Marked goal "${lastGoal.title}" as completed! 🎉`;
+                }
+                return "You don't have any active goals to complete.";
+            }
+        }
+
+        return null;
     };
 
     const fetchClientData = async () => {
         if (!user) return {};
 
         try {
-            // Fetch user profile
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+            const { data: nutritionLogs } = await supabase.from('nutrition_logs').select('*').eq('user_id', user.id).order('logged_at', { ascending: false });
+            const { data: activityLogs } = await supabase.from('activity_logs').select('*').eq('user_id', user.id).order('logged_at', { ascending: false });
+            const { data: sleepLogs } = await supabase.from('sleep_logs').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+            const { data: stressLogs } = await supabase.from('stress_logs').select('*').eq('user_id', user.id).order('logged_at', { ascending: false });
+            const { data: socialLogs } = await supabase.from('social_logs').select('*').eq('user_id', user.id).order('logged_at', { ascending: false });
+            const { data: substanceLogs } = await supabase.from('substance_logs').select('*').eq('user_id', user.id).order('logged_at', { ascending: false });
+            const { data: goals } = await supabase.from('goals').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+            const { data: settings } = await supabase.from('user_settings').select('*').eq('user_id', user.id).single();
+            const { data: memberProfile } = await supabase.from('members').select('*').eq('id', user.id).single();
 
-            // Fetch ALL nutrition logs (no limit)
-            const { data: nutritionLogs } = await supabase
-                .from('nutrition_logs')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('logged_at', { ascending: false });
-
-            // Fetch ALL activity logs (no limit)
-            const { data: activityLogs } = await supabase
-                .from('activity_logs')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('logged_at', { ascending: false });
-
-            // Fetch ALL sleep logs (no limit)
-            const { data: sleepLogs } = await supabase
-                .from('sleep_logs')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
-
-            // Fetch ALL stress logs (no limit)
-            const { data: stressLogs } = await supabase
-                .from('stress_logs')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('logged_at', { ascending: false });
-
-            // Fetch ALL social logs (no limit)
-            const { data: socialLogs } = await supabase
-                .from('social_logs')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('logged_at', { ascending: false });
-
-            // Fetch ALL substance logs (no limit)
-            const { data: substanceLogs } = await supabase
-                .from('substance_logs')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('logged_at', { ascending: false });
-
-            // Fetch ALL goals (no limit)
-            const { data: goals } = await supabase
-                .from('goals')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
-
-            // Fetch user settings
-            const { data: settings } = await supabase
-                .from('user_settings')
-                .select('*')
-                .eq('user_id', user.id)
-                .single();
-
-            // Fetch member profile
-            const { data: memberProfile } = await supabase
-                .from('members')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
-            // Calculate nutrition summary
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const todayLogs = nutritionLogs?.filter(log =>
-                new Date(log.logged_at) >= today
-            ) || [];
-
+            const todayLogs = nutritionLogs?.filter(log => new Date(log.logged_at) >= today) || [];
             const totalCaloriesToday = todayLogs.reduce((sum, log) => sum + (log.calories || 0), 0);
             const mealsLoggedToday = todayLogs.length;
 
@@ -208,12 +237,10 @@ export default function GlobalChat() {
     const generateResponseWithData = (query: string, data: any) => {
         const lowerQuery = query.toLowerCase();
 
-        // Check for nutrition-related queries
         if (lowerQuery.includes('calorie') || lowerQuery.includes('eat') || lowerQuery.includes('meal') || lowerQuery.includes('food') || lowerQuery.includes('banana') || lowerQuery.includes('breakfast') || lowerQuery.includes('lunch') || lowerQuery.includes('dinner') || lowerQuery.includes('snack')) {
             if (data.nutrition?.totalCaloriesToday > 0) {
                 let response = `Today you've consumed ${data.nutrition.totalCaloriesToday} calories across ${data.nutrition.mealsLoggedToday} meal(s). `;
 
-                // Add detailed food items if available
                 if (data.nutrition.recentLogs && data.nutrition.recentLogs.length > 0) {
                     response += "\n\nHere's what you ate today:\n";
                     data.nutrition.recentLogs.forEach((log: any, index: number) => {
@@ -230,7 +257,6 @@ export default function GlobalChat() {
             return "You haven't logged any meals today yet. Would you like to track your nutrition?";
         }
 
-        // Check for activity queries
         if (lowerQuery.includes('activity') || lowerQuery.includes('exercise') || lowerQuery.includes('workout')) {
             if (data.activity?.length > 0) {
                 const recentActivity = data.activity[0];
@@ -239,16 +265,14 @@ export default function GlobalChat() {
             return "You haven't logged any activities yet. Start tracking your workouts!";
         }
 
-        // Check for sleep queries
         if (lowerQuery.includes('sleep') || lowerQuery.includes('rest')) {
             if (data.sleep?.length > 0) {
                 const recentSleep = data.sleep[0];
-                return `Your most recent sleep log was on ${new Date(recentSleep.logged_at).toLocaleDateString()}. You have ${data.sleep.length} sleep entries tracked.`;
+                return `Your most recent sleep log was on ${new Date(recentSleep.created_at).toLocaleDateString()}. You have ${data.sleep.length} sleep entries tracked.`;
             }
             return "You haven't logged any sleep data yet. Track your sleep for better insights!";
         }
 
-        // Check for stress queries
         if (lowerQuery.includes('stress') || lowerQuery.includes('anxiety') || lowerQuery.includes('mood')) {
             if (data.stress?.length > 0) {
                 const recentStress = data.stress[0];
@@ -257,7 +281,6 @@ export default function GlobalChat() {
             return "You haven't logged any stress data yet. Track your stress levels for better mental health!";
         }
 
-        // Check for social queries
         if (lowerQuery.includes('social') || lowerQuery.includes('friend') || lowerQuery.includes('interaction')) {
             if (data.social?.length > 0) {
                 const recentSocial = data.social[0];
@@ -266,7 +289,6 @@ export default function GlobalChat() {
             return "You haven't logged any social activities yet. Track your social interactions for better insights!";
         }
 
-        // Check for substance/risky behavior queries
         if (lowerQuery.includes('substance') || lowerQuery.includes('alcohol') || lowerQuery.includes('smoking') || lowerQuery.includes('risky')) {
             if (data.substance?.length > 0) {
                 const recentSubstance = data.substance[0];
@@ -275,7 +297,6 @@ export default function GlobalChat() {
             return "You haven't logged any substance use. Track risky behaviors for better health awareness.";
         }
 
-        // Check for goals queries
         if (lowerQuery.includes('goal') || lowerQuery.includes('target') || lowerQuery.includes('progress')) {
             if (data.goals?.length > 0) {
                 const activeGoals = data.goals.filter((g: any) => !g.completed);
@@ -295,7 +316,6 @@ export default function GlobalChat() {
             return "You haven't set any goals yet. Set health goals to track your progress!";
         }
 
-        // Check for profile queries
         if (lowerQuery.includes('profile') || lowerQuery.includes('info') || lowerQuery.includes('name') || lowerQuery.includes('score') || lowerQuery.includes('tier')) {
             if (data.profile?.firstName) {
                 let response = `Your profile:\n• Name: ${data.profile.firstName} ${data.profile.lastName || ''}\n• Email: ${data.profile.email}`;
@@ -316,7 +336,6 @@ export default function GlobalChat() {
             return "I can help you with your profile information. What would you like to know?";
         }
 
-        // Check for recent activity
         if (lowerQuery.includes('recent') || lowerQuery.includes('today') || lowerQuery.includes('latest')) {
             if (data.nutrition?.recentLogs?.length > 0) {
                 const lastMeal = data.nutrition.recentLogs[0];
@@ -325,7 +344,6 @@ export default function GlobalChat() {
             return "You haven't logged any meals today. Start tracking to see your progress!";
         }
 
-        // Check for summary/overview
         if (lowerQuery.includes('summary') || lowerQuery.includes('overview') || lowerQuery.includes('status') || lowerQuery.includes('everything')) {
             let summary = "📊 Complete Health Summary:\n\n";
             summary += `🍽️ Nutrition: ${data.nutrition?.totalCaloriesToday || 0} calories today (${data.nutrition?.mealsLoggedToday || 0} meals)\n`;
@@ -344,7 +362,7 @@ export default function GlobalChat() {
             return summary;
         }
 
-        return "I'm here to help! You can ask me about your calories, meals, activity, sleep, stress, social interactions, substance use, goals, profile, or get a complete summary of your health data.";
+        return "I'm here to help! You can ask me about your calories, meals, activity, sleep, stress, social interactions, substance use, goals, profile, or get a complete summary. I can also add, update, or delete data for you!";
     };
 
     const speakResponse = (text: string) => {
@@ -377,7 +395,6 @@ export default function GlobalChat() {
         handleVoiceInput(action);
     };
 
-    // Initialize Speech Recognition
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -428,76 +445,20 @@ export default function GlobalChat() {
 
     return (
         <>
-            {/* Floating Chat Button */}
             {!isChatOpen && (
-                <div style={{
-                    position: 'fixed',
-                    bottom: '24px',
-                    right: '24px',
-                    zIndex: 50
-                }}>
-                    <button
-                        onClick={() => setIsChatOpen(true)}
-                        style={{
-                            width: '4rem',
-                            height: '4rem',
-                            backgroundColor: 'black',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                            border: 'none',
-                            cursor: 'pointer'
-                        }}
-                    >
+                <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 50 }}>
+                    <button onClick={() => setIsChatOpen(true)} style={{ width: '4rem', height: '4rem', backgroundColor: 'black', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: 'none', cursor: 'pointer' }}>
                         <MessageCircle color="white" size={32} />
                     </button>
                 </div>
             )}
 
-            {/* Chat Popup Overlay */}
             {isChatOpen && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    zIndex: 100,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: spacing.xs
-                }}>
-                    {/* Chat Container */}
-                    <div style={{
-                        position: 'relative',
-                        width: '100%',
-                        height: '100%',
-                        backgroundColor: 'white',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        overflow: 'hidden'
-                    }}>
-
-                        {/* Header */}
-                        <div style={{
-                            padding: spacing.lg,
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            borderBottom: '2px solid black',
-                            backgroundColor: colors.white
-                        }}>
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: spacing.xs }}>
+                    <div style={{ position: 'relative', width: '100%', height: '100%', backgroundColor: 'white', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        <div style={{ padding: spacing.lg, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid black', backgroundColor: colors.white }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-                                <div style={{
-                                    width: '32px',
-                                    height: '32px',
-                                    backgroundColor: colors.green,
-                                    borderRadius: '50%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}>
+                                <div style={{ width: '32px', height: '32px', backgroundColor: colors.green, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <MessageCircle size={18} color="white" />
                                 </div>
                                 <div>
@@ -506,87 +467,21 @@ export default function GlobalChat() {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: spacing.sm, alignItems: 'center' }}>
-                                {/* Voice Toggle */}
-                                <button
-                                    onClick={() => setVoiceEnabled(!voiceEnabled)}
-                                    style={{
-                                        backgroundColor: voiceEnabled ? colors.green : colors.gray,
-                                        color: 'white',
-                                        borderRadius: '50%',
-                                        padding: '8px',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}
-                                    title={voiceEnabled ? "Voice On" : "Voice Off"}
-                                >
+                                <button onClick={() => setVoiceEnabled(!voiceEnabled)} style={{ backgroundColor: voiceEnabled ? colors.green : colors.gray, color: 'white', borderRadius: '50%', padding: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={voiceEnabled ? "Voice On" : "Voice Off"}>
                                     {voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
                                 </button>
-                                {/* Export Button */}
-                                <button
-                                    onClick={exportChat}
-                                    style={{
-                                        backgroundColor: colors.black,
-                                        color: 'white',
-                                        borderRadius: '50%',
-                                        padding: '8px',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}
-                                    title="Export Chat"
-                                >
+                                <button onClick={exportChat} style={{ backgroundColor: colors.black, color: 'white', borderRadius: '50%', padding: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Export Chat">
                                     <Download size={20} />
                                 </button>
-                                {/* Close Button */}
-                                <button
-                                    onClick={() => setIsChatOpen(false)}
-                                    style={{
-                                        backgroundColor: 'black',
-                                        color: 'white',
-                                        borderRadius: '9999px',
-                                        padding: '8px 16px',
-                                        fontWeight: 'bold',
-                                        fontSize: fontSize.sm,
-                                        border: 'none',
-                                        cursor: 'pointer'
-                                    }}
-                                >
+                                <button onClick={() => setIsChatOpen(false)} style={{ backgroundColor: 'black', color: 'white', borderRadius: '9999px', padding: '8px 16px', fontWeight: 'bold', fontSize: fontSize.sm, border: 'none', cursor: 'pointer' }}>
                                     CLOSE
                                 </button>
                             </div>
                         </div>
 
-                        {/* Messages Area */}
-                        <div style={{
-                            flex: 1,
-                            overflowY: 'auto',
-                            padding: spacing.lg,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: spacing.md,
-                            backgroundColor: '#f9fafb'
-                        }}>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: spacing.lg, display: 'flex', flexDirection: 'column', gap: spacing.md, backgroundColor: '#f9fafb' }}>
                             {chatMessages.map((msg, idx) => (
-                                <div
-                                    key={idx}
-                                    style={{
-                                        alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                                        maxWidth: '80%',
-                                        padding: spacing.md,
-                                        borderRadius: '16px',
-                                        borderTopRightRadius: msg.role === 'user' ? '4px' : '16px',
-                                        borderTopLeftRadius: msg.role === 'bot' ? '4px' : '16px',
-                                        backgroundColor: msg.role === 'user' ? colors.black : colors.white,
-                                        color: msg.role === 'user' ? colors.white : colors.black,
-                                        border: msg.role === 'bot' ? '2px solid black' : 'none',
-                                        fontSize: fontSize.base
-                                    }}
-                                >
+                                <div key={idx} style={{ alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '80%', padding: spacing.md, borderRadius: '16px', borderTopRightRadius: msg.role === 'user' ? '4px' : '16px', borderTopLeftRadius: msg.role === 'bot' ? '4px' : '16px', backgroundColor: msg.role === 'user' ? colors.black : colors.white, color: msg.role === 'user' ? colors.white : colors.black, border: msg.role === 'bot' ? '2px solid black' : 'none', fontSize: fontSize.base, whiteSpace: 'pre-wrap' }}>
                                     {msg.content}
                                 </div>
                             ))}
@@ -596,118 +491,27 @@ export default function GlobalChat() {
                                 </div>
                             )}
 
-                            {/* Quick Action Buttons */}
-                            <div style={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: spacing.sm,
-                                marginTop: spacing.md,
-                                justifyContent: 'center'
-                            }}>
-                                {[
-                                    "Show today's calories",
-                                    "What was my last meal?",
-                                    "Health summary",
-                                    "My profile"
-                                ].map((action) => (
-                                    <button
-                                        key={action}
-                                        onClick={() => handleQuickAction(action)}
-                                        style={{
-                                            padding: '8px 16px',
-                                            backgroundColor: colors.white,
-                                            color: colors.black,
-                                            border: '2px solid black',
-                                            borderRadius: '9999px',
-                                            fontSize: '12pt',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = colors.black;
-                                            e.currentTarget.style.color = colors.white;
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = colors.white;
-                                            e.currentTarget.style.color = colors.black;
-                                        }}
-                                    >
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md, justifyContent: 'center' }}>
+                                {["Show today's calories", "What was my last meal?", "Health summary", "My profile"].map((action) => (
+                                    <button key={action} onClick={() => handleQuickAction(action)} style={{ padding: '8px 16px', backgroundColor: colors.white, color: colors.black, border: '2px solid black', borderRadius: '9999px', fontSize: '12pt', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.black; e.currentTarget.style.color = colors.white; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.white; e.currentTarget.style.color = colors.black; }}>
                                         {action}
                                     </button>
                                 ))}
                             </div>
+                            <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Controls Area */}
-                        <div style={{
-                            padding: spacing.lg,
-                            borderTop: '2px solid black',
-                            borderBottom: '2px solid black', // Separator before footer
-                            backgroundColor: colors.white
-                        }}>
-                            {/* Text Input with Send and Mic Buttons */}
+                        <div style={{ padding: spacing.lg, borderTop: '2px solid black', borderBottom: '2px solid black', backgroundColor: colors.white }}>
                             <form onSubmit={handleTextSubmit} style={{ width: '100%', display: 'flex', gap: spacing.sm, alignItems: 'center' }}>
-                                <input
-                                    type="text"
-                                    value={textInput}
-                                    onChange={(e) => setTextInput(e.target.value)}
-                                    placeholder="Type your question..."
-                                    style={{
-                                        flex: 1,
-                                        padding: '12px 16px',
-                                        border: '2px solid black',
-                                        borderRadius: '9999px',
-                                        fontSize: '14pt',
-                                        outline: 'none'
-                                    }}
-                                />
-                                <button
-                                    type="submit"
-                                    style={{
-                                        padding: '10px 20px',
-                                        backgroundColor: colors.black,
-                                        color: colors.white,
-                                        border: 'none',
-                                        borderRadius: '9999px',
-                                        fontSize: '14pt',
-                                        fontWeight: '700',
-                                        cursor: 'pointer',
-                                        minWidth: '80px'
-                                    }}
-                                >
+                                <input type="text" value={textInput} onChange={(e) => setTextInput(e.target.value)} placeholder="Type your question..." style={{ flex: 1, padding: '12px 16px', border: '2px solid black', borderRadius: '9999px', fontSize: '14pt', outline: 'none' }} />
+                                <button type="submit" style={{ padding: '10px 20px', backgroundColor: colors.black, color: colors.white, border: 'none', borderRadius: '9999px', fontSize: '14pt', fontWeight: '700', cursor: 'pointer', minWidth: '80px' }}>
                                     Send
                                 </button>
-                                {/* Mic Button */}
-                                <button
-                                    type="button"
-                                    onMouseDown={startRecording}
-                                    onMouseUp={stopRecording}
-                                    onTouchStart={startRecording}
-                                    onTouchEnd={stopRecording}
-                                    style={{
-                                        width: '50px',
-                                        height: '50px',
-                                        borderRadius: '50%',
-                                        backgroundColor: isListening ? colors.red : colors.black,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        transition: 'transform 0.1s',
-                                        transform: isListening ? 'scale(1.1)' : 'scale(1)',
-                                        flexShrink: 0
-                                    }}
-                                    title={isListening ? 'Release to Send' : 'Hold to Speak'}
-                                >
+                                <button type="button" onMouseDown={startRecording} onMouseUp={stopRecording} onTouchStart={startRecording} onTouchEnd={stopRecording} style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: isListening ? colors.red : colors.black, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', transition: 'transform 0.1s', transform: isListening ? 'scale(1.1)' : 'scale(1)', flexShrink: 0 }} title={isListening ? 'Release to Send' : 'Hold to Speak'}>
                                     <Mic size={24} color="white" />
                                 </button>
                             </form>
                         </div>
-
-
-
                     </div>
                 </div>
             )}

@@ -101,19 +101,18 @@ export default function LoginPage() {
                         textAlign: 'center',
                         animation: 'fadeIn 0.3s ease-out'
                     }}>
-                        <CheckCircle size={64} color="#1a5d1a" />
                         <h2 style={{ fontSize: fontSize.xl, fontWeight: 'bold', color: '#1a5d1a', margin: 0 }}>Success!</h2>
                         <p style={{ color: '#4b5563', fontSize: fontSize.base }}>{message.text}</p>
                         <button
                             onClick={() => { setMessage(null); setIsSignUp(false); }}
                             style={{
-                                backgroundColor: '#1a5d1a',
+                                backgroundColor: '#000000',
                                 color: colors.white,
-                                padding: '12px 24px',
-                                borderRadius: '8px',
+                                padding: '10px',
+                                borderRadius: '9999px',
                                 border: 'none',
-                                fontSize: fontSize.base,
-                                fontWeight: 'bold',
+                                fontSize: '14pt',
+                                fontWeight: '700',
                                 cursor: 'pointer',
                                 marginTop: spacing.md
                             }}
@@ -245,13 +244,13 @@ export default function LoginPage() {
                                 type="submit"
                                 disabled={loading}
                                 style={{
-                                    backgroundColor: '#1a5d1a',
+                                    backgroundColor: '#000000',
                                     color: colors.white,
-                                    padding: '12px',
-                                    borderRadius: '8px',
+                                    padding: '10px',
+                                    borderRadius: '9999px',
                                     border: 'none',
-                                    fontSize: fontSize.base,
-                                    fontWeight: 'bold',
+                                    fontSize: '14pt',
+                                    fontWeight: '700',
                                     cursor: loading ? 'wait' : 'pointer',
                                     opacity: loading ? 0.7 : 1,
                                     textTransform: 'uppercase',

@@ -133,6 +133,8 @@ export default function NutritionPage() {
     const [showSnackPopup, setShowSnackPopup] = useState(false);
     const [selectedSnackItems, setSelectedSnackItems] = useState<string[]>([]);
     const [snackMood, setSnackMood] = useState('');
+    const [breakfastSortMode, setBreakfastSortMode] = useState<'like' | 'abc' | 'calories'>('like');
+    const [breakfastItemFrequency, setBreakfastItemFrequency] = useState<Record<string, number>>({});
     const [mealLog, setMealLog] = useState<Array<{
         time: string;
         type: string;
@@ -180,6 +182,12 @@ export default function NutritionPage() {
         };
 
         loadMeals();
+
+        // Load breakfast frequency from localStorage
+        const savedFrequency = localStorage.getItem('breakfast_frequency');
+        if (savedFrequency) {
+            setBreakfastItemFrequency(JSON.parse(savedFrequency));
+        }
     }, [user]);
 
     // Log Meal Form States
@@ -210,6 +218,23 @@ export default function NutritionPage() {
         return BREAKFAST_ITEMS
             .filter(item => selectedBreakfastItems.includes(item.name))
             .reduce((total, item) => total + item.calories, 0);
+    };
+
+    const getSortedBreakfastItems = () => {
+        const items = [...BREAKFAST_ITEMS];
+
+        if (breakfastSortMode === 'abc') {
+            return items.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (breakfastSortMode === 'calories') {
+            return items.sort((a, b) => a.calories - b.calories); // Lowest to highest
+        } else {
+            // 'like' - sort by selection frequency (most selected first)
+            return items.sort((a, b) => {
+                const freqA = breakfastItemFrequency[a.name] || 0;
+                const freqB = breakfastItemFrequency[b.name] || 0;
+                return freqB - freqA; // Higher frequency first
+            });
+        }
     };
 
     const handleAddBreakfast = async () => {
@@ -245,6 +270,14 @@ export default function NutritionPage() {
 
             setDailyCalories(prev => prev + calories);
             setMealsLogged(prev => prev + 1);
+
+            // Update frequency tracking
+            const updatedFrequency = { ...breakfastItemFrequency };
+            selectedBreakfastItems.forEach(itemName => {
+                updatedFrequency[itemName] = (updatedFrequency[itemName] || 0) + 1;
+            });
+            setBreakfastItemFrequency(updatedFrequency);
+            localStorage.setItem('breakfast_frequency', JSON.stringify(updatedFrequency));
         }
 
         setShowBreakfastPopup(false);
@@ -437,12 +470,12 @@ export default function NutritionPage() {
                         <h2 style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0 }}>Today's Summary</h2>
                         <Link href="/" style={{ textDecoration: 'none' }}>
                             <button style={{
-                                padding: '6px 16px',
+                                padding: '10px',
                                 backgroundColor: colors.black,
                                 color: colors.white,
                                 border: 'none',
                                 borderRadius: '9999px',
-                                fontSize: '12pt',
+                                fontSize: '14pt',
                                 fontWeight: '700',
                                 cursor: 'pointer',
                                 display: 'flex',
@@ -450,7 +483,6 @@ export default function NutritionPage() {
                                 justifyContent: 'center',
                                 gap: '6px'
                             }}>
-                                <Home size={16} />
                                 Home
                             </button>
                         </Link>
@@ -492,21 +524,19 @@ export default function NutritionPage() {
                                 setShowBreakfastPopup(true);
                             }}
                             style={{
-                                padding: spacing.lg,
-                                backgroundColor: colors.secondary,
+                                padding: '10px',
+                                backgroundColor: '#f97316',
                                 color: colors.white,
                                 border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '14pt',
-                                fontWeight: 'bold',
+                                borderRadius: '9999px',
+                                fontSize: '18pt',
+                                fontWeight: '700',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: spacing.xs
+                                justifyContent: 'center'
                             }}
                         >
-                            <Coffee size={20} />
                             Breakfast
                         </button>
                         <button
@@ -514,21 +544,19 @@ export default function NutritionPage() {
                                 setShowLunchPopup(true);
                             }}
                             style={{
-                                padding: spacing.lg,
-                                backgroundColor: colors.green,
+                                padding: '10px',
+                                backgroundColor: '#22c55e',
                                 color: colors.white,
                                 border: 'none',
-                                borderRadius: '8px',
-                                fontSize: fontSize.base,
-                                fontWeight: 'bold',
+                                borderRadius: '9999px',
+                                fontSize: '18pt',
+                                fontWeight: '700',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: spacing.xs
+                                justifyContent: 'center'
                             }}
                         >
-                            <Apple size={20} />
                             Lunch
                         </button>
                         <button
@@ -536,21 +564,19 @@ export default function NutritionPage() {
                                 setShowDinnerPopup(true);
                             }}
                             style={{
-                                padding: spacing.lg,
-                                backgroundColor: colors.blue,
+                                padding: '10px',
+                                backgroundColor: '#3b82f6',
                                 color: colors.white,
                                 border: 'none',
-                                borderRadius: '8px',
-                                fontSize: fontSize.base,
-                                fontWeight: 'bold',
+                                borderRadius: '9999px',
+                                fontSize: '18pt',
+                                fontWeight: '700',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: spacing.xs
+                                justifyContent: 'center'
                             }}
                         >
-                            <Utensils size={20} />
                             Dinner
                         </button>
                         <button
@@ -558,21 +584,19 @@ export default function NutritionPage() {
                                 setShowSnackPopup(true);
                             }}
                             style={{
-                                padding: spacing.lg,
-                                backgroundColor: colors.red,
+                                padding: '10px',
+                                backgroundColor: '#a855f7',
                                 color: colors.white,
                                 border: 'none',
-                                borderRadius: '8px',
-                                fontSize: fontSize.base,
-                                fontWeight: 'bold',
+                                borderRadius: '9999px',
+                                fontSize: '18pt',
+                                fontWeight: '700',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: spacing.xs
+                                justifyContent: 'center'
                             }}
                         >
-                            <Cookie size={20} />
                             Snack
                         </button>
                     </div>
@@ -639,12 +663,12 @@ export default function NutritionPage() {
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '2px' }}>
                     <Link href="/" style={{ textDecoration: 'none' }}>
                         <button style={{
-                            padding: '8px 20px',
+                            padding: '10px',
                             backgroundColor: colors.black,
                             color: colors.white,
                             border: 'none',
                             borderRadius: '9999px',
-                            fontSize: '15pt',
+                            fontSize: '14pt',
                             fontWeight: '700',
                             cursor: 'pointer',
                             display: 'flex',
@@ -652,7 +676,6 @@ export default function NutritionPage() {
                             justifyContent: 'center',
                             gap: spacing.sm
                         }}>
-                            <Home size={20} />
                             Home
                         </button>
                     </Link>
@@ -945,15 +968,72 @@ export default function NutritionPage() {
                             fontSize: fontSize.lg,
                             fontWeight: 'bold',
                             color: '#333',
-                            marginBottom: spacing.lg,
+                            marginBottom: spacing.md,
                             textAlign: 'center'
                         }}>
                             Select Breakfast Items
                         </h3>
 
+                        {/* Sort Buttons */}
+                        <div style={{
+                            display: 'flex',
+                            gap: spacing.sm,
+                            marginBottom: spacing.lg,
+                            justifyContent: 'center'
+                        }}>
+                            <button
+                                onClick={() => setBreakfastSortMode('like')}
+                                style={{
+                                    padding: '10px',
+                                    backgroundColor: breakfastSortMode === 'like' ? colors.secondary : colors.black,
+                                    color: colors.white,
+                                    border: 'none',
+                                    borderRadius: '9999px',
+                                    fontSize: '14pt',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    minWidth: '80px'
+                                }}
+                            >
+                                Like
+                            </button>
+                            <button
+                                onClick={() => setBreakfastSortMode('abc')}
+                                style={{
+                                    padding: '10px',
+                                    backgroundColor: breakfastSortMode === 'abc' ? colors.secondary : colors.black,
+                                    color: colors.white,
+                                    border: 'none',
+                                    borderRadius: '9999px',
+                                    fontSize: '14pt',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    minWidth: '80px'
+                                }}
+                            >
+                                ABC
+                            </button>
+                            <button
+                                onClick={() => setBreakfastSortMode('calories')}
+                                style={{
+                                    padding: '10px',
+                                    backgroundColor: breakfastSortMode === 'calories' ? colors.secondary : colors.black,
+                                    color: colors.white,
+                                    border: 'none',
+                                    borderRadius: '9999px',
+                                    fontSize: '14pt',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    minWidth: '100px'
+                                }}
+                            >
+                                Calories
+                            </button>
+                        </div>
+
                         {/* Breakfast Items List */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-                            {BREAKFAST_ITEMS.map((item) => {
+                            {getSortedBreakfastItems().map((item) => {
                                 const isSelected = selectedBreakfastItems.includes(item.name);
                                 return (
                                     <div
@@ -1076,14 +1156,15 @@ export default function NutritionPage() {
                                 onClick={handleAddBreakfast}
                                 style={{
                                     flex: 1,
-                                    backgroundColor: colors.green,
+                                    backgroundColor: (selectedBreakfastItems.length > 0 || breakfastMood) ? colors.blue : colors.black,
                                     color: 'white',
-                                    padding: '12px 24px',
+                                    padding: '10px',
                                     border: 'none',
-                                    borderRadius: '8px',
-                                    fontWeight: 'bold',
-                                    fontSize: fontSize.base,
-                                    cursor: 'pointer'
+                                    borderRadius: '9999px',
+                                    fontWeight: '700',
+                                    fontSize: '14pt',
+                                    cursor: 'pointer',
+                                    transition: 'background-color 0.3s ease'
                                 }}
                             >
                                 Save
@@ -1096,13 +1177,13 @@ export default function NutritionPage() {
                                 }}
                                 style={{
                                     flex: 1,
-                                    backgroundColor: colors.gray,
+                                    backgroundColor: colors.black,
                                     color: 'white',
-                                    padding: '12px 24px',
+                                    padding: '10px',
                                     border: 'none',
-                                    borderRadius: '8px',
-                                    fontWeight: 'bold',
-                                    fontSize: fontSize.base,
+                                    borderRadius: '9999px',
+                                    fontWeight: '700',
+                                    fontSize: '14pt',
                                     cursor: 'pointer'
                                 }}
                             >
@@ -1217,14 +1298,15 @@ export default function NutritionPage() {
                                 onClick={handleAddLunch}
                                 style={{
                                     flex: 1,
-                                    backgroundColor: colors.green,
+                                    backgroundColor: (selectedLunchItems.length > 0 || lunchMood) ? colors.blue : colors.black,
                                     color: 'white',
-                                    padding: '12px 24px',
+                                    padding: '10px',
                                     border: 'none',
-                                    borderRadius: '8px',
-                                    fontWeight: 'bold',
+                                    borderRadius: '9999px',
+                                    fontWeight: '700',
                                     fontSize: '14pt',
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    transition: 'background-color 0.3s ease'
                                 }}
                             >
                                 Save
@@ -1237,12 +1319,12 @@ export default function NutritionPage() {
                                 }}
                                 style={{
                                     flex: 1,
-                                    backgroundColor: colors.gray,
+                                    backgroundColor: colors.black,
                                     color: 'white',
-                                    padding: '12px 24px',
+                                    padding: '10px',
                                     border: 'none',
-                                    borderRadius: '8px',
-                                    fontWeight: 'bold',
+                                    borderRadius: '9999px',
+                                    fontWeight: '700',
                                     fontSize: '14pt',
                                     cursor: 'pointer'
                                 }}
@@ -1358,14 +1440,15 @@ export default function NutritionPage() {
                                 onClick={handleAddDinner}
                                 style={{
                                     flex: 1,
-                                    backgroundColor: colors.green,
+                                    backgroundColor: (selectedDinnerItems.length > 0 || dinnerMood) ? colors.blue : colors.black,
                                     color: 'white',
-                                    padding: '12px 24px',
+                                    padding: '10px',
                                     border: 'none',
-                                    borderRadius: '8px',
-                                    fontWeight: 'bold',
+                                    borderRadius: '9999px',
+                                    fontWeight: '700',
                                     fontSize: '14pt',
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    transition: 'background-color 0.3s ease'
                                 }}
                             >
                                 Save
@@ -1378,12 +1461,12 @@ export default function NutritionPage() {
                                 }}
                                 style={{
                                     flex: 1,
-                                    backgroundColor: colors.gray,
+                                    backgroundColor: colors.black,
                                     color: 'white',
-                                    padding: '12px 24px',
+                                    padding: '10px',
                                     border: 'none',
-                                    borderRadius: '8px',
-                                    fontWeight: 'bold',
+                                    borderRadius: '9999px',
+                                    fontWeight: '700',
                                     fontSize: '14pt',
                                     cursor: 'pointer'
                                 }}
@@ -1499,14 +1582,15 @@ export default function NutritionPage() {
                                 onClick={handleAddSnack}
                                 style={{
                                     flex: 1,
-                                    backgroundColor: colors.green,
+                                    backgroundColor: (selectedSnackItems.length > 0 || snackMood) ? colors.blue : colors.black,
                                     color: 'white',
-                                    padding: '12px 24px',
+                                    padding: '10px',
                                     border: 'none',
-                                    borderRadius: '8px',
-                                    fontWeight: 'bold',
+                                    borderRadius: '9999px',
+                                    fontWeight: '700',
                                     fontSize: '14pt',
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    transition: 'background-color 0.3s ease'
                                 }}
                             >
                                 Save
@@ -1519,12 +1603,12 @@ export default function NutritionPage() {
                                 }}
                                 style={{
                                     flex: 1,
-                                    backgroundColor: colors.gray,
+                                    backgroundColor: colors.black,
                                     color: 'white',
-                                    padding: '12px 24px',
+                                    padding: '10px',
                                     border: 'none',
-                                    borderRadius: '8px',
-                                    fontWeight: 'bold',
+                                    borderRadius: '9999px',
+                                    fontWeight: '700',
                                     fontSize: '14pt',
                                     cursor: 'pointer'
                                 }}

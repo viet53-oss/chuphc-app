@@ -18,8 +18,8 @@
   padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-  font-size: 15pt;
-  /* Global font size requirement: 15pt */
+  font-size: 14pt;
+  /* Global font size requirement: 14pt */
 }
 
 html,
@@ -39,8 +39,8 @@ b,
 strong {
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 15pt;
-  /* Heading size standardization: 15pt */
+  font-size: 14pt;
+  /* Heading size standardization: 14pt */
 }
 
 /* SECTION SYSTEM */
@@ -105,7 +105,7 @@ strong {
 .title-md,
 .text-body,
 .text-small {
-  font-size: 15pt !important;
+  font-size: 14pt !important;
 }
 
 .text-small {
@@ -195,8 +195,8 @@ a {
   background-color: #000000;
   color: #ffffff;
   border-radius: 9999px;
-  padding: 8px 20px;
-  font-size: 15pt;
+  padding: 10px;
+  font-size: 14pt;
   font-weight: 700;
   border: none;
   cursor: pointer;

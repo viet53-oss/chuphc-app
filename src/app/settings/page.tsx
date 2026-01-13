@@ -29,6 +29,8 @@ export default function SettingsPage() {
     const [newMemberPassword, setNewMemberPassword] = useState('');
     const [editingPassword, setEditingPassword] = useState('');
     const [editingMember, setEditingMember] = useState<Member | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -94,8 +96,6 @@ export default function SettingsPage() {
     };
 
     const handleDeleteMember = async (id: string) => {
-        if (!confirm('Delete this member?')) return;
-
         const { error } = await supabase.from('members').delete().eq('id', id);
         if (error) {
             console.error('Error deleting member:', error);
@@ -103,9 +103,13 @@ export default function SettingsPage() {
             const updated = members.filter(m => m.id !== id);
             setMembers(updated);
             localStorage.setItem('chuphc_members_v2', JSON.stringify(updated));
+            setStatusMsg({ type: 'error', text: 'Error deleting client from database.' });
         } else {
             setMembers(members.filter(m => m.id !== id));
+            setStatusMsg({ type: 'success', text: 'Client deleted successfully.' });
         }
+        setShowDeleteConfirm(false);
+        setMemberToDelete(null);
     };
 
     const handleUpdateMember = async (updated: Member) => {
@@ -141,10 +145,9 @@ export default function SettingsPage() {
     };
 
     const handleResetPassword = async (email: string) => {
-        if (!confirm(`Send password reset email to ${email}?`)) return;
         const { error } = await supabase.auth.resetPasswordForEmail(email);
-        if (error) alert('Error sending reset link: ' + error.message);
-        else alert('Password reset link sent!');
+        if (error) setStatusMsg({ type: 'error', text: 'Error sending reset link: ' + error.message });
+        else setStatusMsg({ type: 'success', text: 'Password reset link sent to ' + email });
     };
     return (
         <ProtectedRoute>
@@ -153,181 +156,7 @@ export default function SettingsPage() {
 
 
 
-                {/* Members Section (Admin Only) */}
-                {isAdmin && (
-                    <section style={{
-                        border: '2px solid black',
-                        borderRadius: '12px',
-                        backgroundColor: colors.white,
-                        padding: spacing.md,
-                        margin: spacing.xs,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: spacing.md
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, borderBottom: '1px solid #eee', paddingBottom: spacing.sm }}>
-                            <Users size={24} color={colors.primary} />
-                            <h2 style={{ fontSize: fontSize.lg, fontWeight: 'bold', margin: 0 }}>Clients</h2>
-                        </div>
 
-                        {/* Add Member */}
-                        <div style={{ display: 'flex', gap: spacing.sm }}>
-                            <input
-                                type="email"
-                                placeholder="Client Email"
-                                value={newMemberEmail}
-                                onChange={(e) => setNewMemberEmail(e.target.value)}
-                                autoComplete="off"
-                                style={{
-                                    flex: 1,
-                                    padding: '8px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #ccc',
-                                    fontSize: fontSize.base
-                                }}
-                            />
-                            <input
-                                type="password"
-                                placeholder="Password"
-                                value={newMemberPassword}
-                                onChange={(e) => setNewMemberPassword(e.target.value)}
-                                autoComplete="new-password"
-                                style={{
-                                    flex: 1,
-                                    padding: '8px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #ccc',
-                                    fontSize: fontSize.base
-                                }}
-                            />
-                            <button
-                                type="button"
-                                onClick={handleAddMember}
-                                style={{
-                                    backgroundColor: colors.green,
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    padding: '8px 16px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px'
-                                }}
-                            >
-                                <Plus size={20} />
-                                Add
-                            </button>
-                        </div>
-                        {statusMsg && (
-                            <div style={{
-                                padding: '8px',
-                                borderRadius: '4px',
-                                backgroundColor: statusMsg.type === 'error' ? '#fee2e2' : '#dcfce7',
-                                color: statusMsg.type === 'error' ? '#ef4444' : '#16a34a',
-                                fontSize: fontSize.sm,
-                                fontWeight: 'bold'
-                            }}>
-                                {statusMsg.text}
-                            </div>
-                        )}
-
-                        {/* Edit Form Modal/Overlay */}
-                        {editingMember && (
-                            <div style={{
-                                padding: spacing.md,
-                                backgroundColor: '#f0f9ff',
-                                borderRadius: '8px',
-                                border: `1px solid ${colors.blue}`,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: spacing.sm
-                            }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <h3 style={{ margin: 0, fontWeight: 'bold' }}>Edit Client: {editingMember.email}</h3>
-                                    <button onClick={() => setEditingMember(null)} style={{ border: 'none', background: 'none', cursor: 'pointer' }}><X size={20} /></button>
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.sm }}>
-                                    <input placeholder="First Name" value={editingMember.first_name || ''} onChange={e => setEditingMember({ ...editingMember, first_name: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }} />
-                                    <input placeholder="Last Name" value={editingMember.last_name || ''} onChange={e => setEditingMember({ ...editingMember, last_name: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }} />
-                                    <input placeholder="Address" value={editingMember.address || ''} onChange={e => setEditingMember({ ...editingMember, address: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd', gridColumn: 'span 2' }} />
-
-                                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: spacing.sm, gridColumn: 'span 2' }}>
-                                        <input placeholder="City" value={editingMember.city || ''} onChange={e => setEditingMember({ ...editingMember, city: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }} />
-                                        <input placeholder="State" value={editingMember.state || ''} onChange={e => setEditingMember({ ...editingMember, state: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }} />
-                                        <input placeholder="Zip" value={editingMember.zip || ''} onChange={e => setEditingMember({ ...editingMember, zip: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }} />
-                                    </div>
-
-                                    <input placeholder="Phone" value={editingMember.phone || ''} onChange={e => setEditingMember({ ...editingMember, phone: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd', gridColumn: 'span 2' }} />
-                                    <input
-                                        type="password"
-                                        placeholder="New Password (leave blank to keep)"
-                                        value={editingPassword}
-                                        onChange={e => setEditingPassword(e.target.value)}
-                                        autoComplete="new-password"
-                                        style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd', gridColumn: 'span 2' }}
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', gap: spacing.sm, marginTop: spacing.sm }}>
-                                    <button onClick={() => handleUpdateMember(editingMember)} style={{ padding: '8px 16px', backgroundColor: colors.blue, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Save Changes</button>
-                                    <button onClick={() => handleResetPassword(editingMember.email)} style={{ padding: '8px 16px', backgroundColor: colors.orange, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Reset Password</button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Members List */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-                            {members.length === 0 ? (
-                                <p style={{ color: colors.gray, fontStyle: 'italic', textAlign: 'center' }}>{loading ? 'Loading...' : 'No clients found.'}</p>
-                            ) : (
-                                members.map(member => (
-                                    <div key={member.id} style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        padding: '8px',
-                                        backgroundColor: '#f9f9f9',
-                                        borderRadius: '8px',
-                                        border: '1px solid #eee'
-                                    }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontSize: fontSize.base, fontWeight: '500' }}>{member.email}</span>
-                                            {(member.first_name || member.last_name) && (
-                                                <span style={{ fontSize: fontSize.xs, color: colors.gray }}>{member.first_name} {member.last_name}</span>
-                                            )}
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button
-                                                onClick={() => { setEditingMember(member); setEditingPassword(''); }}
-                                                style={{
-                                                    backgroundColor: 'transparent',
-                                                    border: 'none',
-                                                    cursor: 'pointer',
-                                                    padding: '4px'
-                                                }}
-                                                title="Edit"
-                                            >
-                                                <Pencil size={18} color={colors.blue} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteMember(member.id)}
-                                                style={{
-                                                    backgroundColor: 'transparent',
-                                                    border: 'none',
-                                                    cursor: 'pointer',
-                                                    padding: '4px'
-                                                }}
-                                                title="Delete"
-                                            >
-                                                <Trash size={18} color={colors.red} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </section>
-                )}
 
                 {/* Settings Menu */}
                 <section style={{
@@ -406,18 +235,202 @@ export default function SettingsPage() {
 
                 </section>
 
+                {/* Members Section (Admin Only) */}
+                {isAdmin && (
+                    <section style={{
+                        border: '2px solid black',
+                        borderRadius: '12px',
+                        backgroundColor: colors.white,
+                        padding: spacing.md,
+                        margin: spacing.xs,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: spacing.md
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, borderBottom: '1px solid #eee', paddingBottom: spacing.sm }}>
+                            <Users size={24} color={colors.primary} />
+                            <h2 style={{ fontSize: fontSize.lg, fontWeight: 'bold', margin: 0 }}>Clients</h2>
+                        </div>
+
+                        {/* Add Member */}
+                        <div style={{ display: 'flex', gap: spacing.sm }}>
+                            <input
+                                type="email"
+                                placeholder="Client Email"
+                                value={newMemberEmail}
+                                onChange={(e) => setNewMemberEmail(e.target.value)}
+                                autoComplete="off"
+                                style={{
+                                    flex: 1,
+                                    padding: '8px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #ccc',
+                                    fontSize: fontSize.base
+                                }}
+                            />
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                value={newMemberPassword}
+                                onChange={(e) => setNewMemberPassword(e.target.value)}
+                                autoComplete="new-password"
+                                style={{
+                                    flex: 1,
+                                    padding: '8px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #ccc',
+                                    fontSize: fontSize.base
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={handleAddMember}
+                                style={{
+                                    backgroundColor: colors.black,
+                                    color: colors.white,
+                                    border: 'none',
+                                    borderRadius: '9999px',
+                                    padding: '10px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: spacing.sm,
+                                    fontSize: '14pt',
+                                    fontWeight: '700'
+                                }}
+                            >
+                                Add
+                            </button>
+                        </div>
+                        {statusMsg && (
+                            <div style={{
+                                padding: '8px',
+                                borderRadius: '4px',
+                                backgroundColor: statusMsg.type === 'error' ? '#fee2e2' : '#dcfce7',
+                                color: statusMsg.type === 'error' ? '#ef4444' : '#16a34a',
+                                fontSize: fontSize.sm,
+                                fontWeight: 'bold'
+                            }}>
+                                {statusMsg.text}
+                            </div>
+                        )}
+
+
+
+                        {/* Members List */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
+                            {members.length === 0 ? (
+                                <p style={{ color: colors.gray, fontStyle: 'italic', textAlign: 'center' }}>{loading ? 'Loading...' : 'No clients found.'}</p>
+                            ) : (
+                                members.map(member => (
+                                    <div key={member.id} style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: spacing.xs,
+                                        padding: '12px',
+                                        backgroundColor: '#f9f9f9',
+                                        borderRadius: '12px',
+                                        border: '1px solid #eee'
+                                    }}>
+                                        <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center'
+                                        }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontSize: fontSize.base, fontWeight: '700' }}>{member.email}</span>
+                                                {(member.first_name || member.last_name) && (
+                                                    <span style={{ fontSize: fontSize.sm, color: colors.gray }}>{member.first_name} {member.last_name}</span>
+                                                )}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button
+                                                    onClick={() => { setEditingMember(member); setEditingPassword(''); }}
+                                                    style={{
+                                                        backgroundColor: colors.black,
+                                                        color: colors.white,
+                                                        border: 'none',
+                                                        borderRadius: '9999px',
+                                                        padding: '10px',
+                                                        fontSize: '14pt',
+                                                        fontWeight: '700',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setMemberToDelete(member.id);
+                                                        setShowDeleteConfirm(true);
+                                                    }}
+                                                    style={{
+                                                        backgroundColor: colors.black,
+                                                        color: colors.white,
+                                                        border: 'none',
+                                                        borderRadius: '9999px',
+                                                        padding: '10px',
+                                                        fontSize: '14pt',
+                                                        fontWeight: '700',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    title="Delete"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {editingMember?.id === member.id && (
+                                            <div style={{
+                                                marginTop: spacing.sm,
+                                                padding: spacing.md,
+                                                backgroundColor: '#f0f9ff',
+                                                borderRadius: '8px',
+                                                border: `1px solid ${colors.blue}`,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: spacing.sm
+                                            }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.sm }}>
+                                                    <input placeholder="First Name" value={editingMember.first_name || ''} onChange={e => setEditingMember({ ...editingMember, first_name: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }} />
+                                                    <input placeholder="Last Name" value={editingMember.last_name || ''} onChange={e => setEditingMember({ ...editingMember, last_name: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }} />
+                                                    <input placeholder="Address" value={editingMember.address || ''} onChange={e => setEditingMember({ ...editingMember, address: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd', gridColumn: 'span 2' }} />
+
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: spacing.sm, gridColumn: 'span 2' }}>
+                                                        <input placeholder="City" value={editingMember.city || ''} onChange={e => setEditingMember({ ...editingMember, city: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }} />
+                                                        <input placeholder="State" value={editingMember.state || ''} onChange={e => setEditingMember({ ...editingMember, state: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }} />
+                                                        <input placeholder="Zip" value={editingMember.zip || ''} onChange={e => setEditingMember({ ...editingMember, zip: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }} />
+                                                    </div>
+
+                                                    <input placeholder="Phone" value={editingMember.phone || ''} onChange={e => setEditingMember({ ...editingMember, phone: e.target.value })} style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd', gridColumn: 'span 2' }} />
+                                                </div>
+                                                <div style={{ display: 'flex', gap: spacing.sm, marginTop: spacing.sm }}>
+                                                    <button onClick={() => handleUpdateMember(editingMember)} style={{ padding: '10px', backgroundColor: colors.blue, color: colors.white, border: 'none', borderRadius: '9999px', cursor: 'pointer', fontWeight: '700', fontSize: '14pt', transition: 'background-color 0.3s ease' }}>Save Changes</button>
+                                                    <button onClick={() => setEditingMember(null)} style={{ padding: '10px', backgroundColor: colors.black, color: colors.white, border: 'none', borderRadius: '9999px', cursor: 'pointer', fontWeight: '700', fontSize: '14pt' }}>Cancel</button>
+                                                    <button onClick={() => handleResetPassword(editingMember.email)} style={{ padding: '10px', backgroundColor: colors.black, color: colors.white, border: 'none', borderRadius: '9999px', cursor: 'pointer', fontSize: '14pt', fontWeight: '700', marginLeft: 'auto' }}>Send Reset Email</button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </section>
+                )}
+
                 <div style={{ display: 'flex', gap: spacing.md, margin: spacing.xs }}>
                     {/* Logout Button */}
                     <button
                         onClick={signOut}
                         style={{
                             flex: 1,
-                            padding: '12px 24px',
-                            backgroundColor: colors.red || '#ef4444',
+                            padding: '10px',
+                            backgroundColor: colors.black,
                             color: colors.white,
                             border: 'none',
                             borderRadius: '9999px',
-                            fontSize: '12pt',
+                            fontSize: '14pt',
                             fontWeight: '700',
                             cursor: 'pointer',
                             display: 'flex',
@@ -427,7 +440,6 @@ export default function SettingsPage() {
                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
                         }}
                     >
-                        <LogOut size={20} />
                         Logout
                     </button>
 
@@ -435,12 +447,12 @@ export default function SettingsPage() {
                     <Link href="/" style={{ textDecoration: 'none', flex: 1 }}>
                         <button style={{
                             width: '100%',
-                            padding: '12px 24px',
+                            padding: '10px',
                             backgroundColor: colors.black,
                             color: colors.white,
                             border: 'none',
                             borderRadius: '9999px',
-                            fontSize: '12pt',
+                            fontSize: '14pt',
                             fontWeight: '700',
                             cursor: 'pointer',
                             display: 'flex',
@@ -449,13 +461,81 @@ export default function SettingsPage() {
                             gap: spacing.sm,
                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
                         }}>
-                            <Home size={20} />
                             Home
                         </button>
                     </Link>
                 </div>
 
             </div>
+
+            {/* Delete Confirmation Popup */}
+            {showDeleteConfirm && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000,
+                    backdropFilter: 'blur(4px)'
+                }}>
+                    <div style={{
+                        backgroundColor: colors.white,
+                        padding: spacing.xl,
+                        borderRadius: '16px',
+                        width: '90%',
+                        maxWidth: '400px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: spacing.lg,
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+                    }}>
+                        <h2 style={{ fontSize: '18pt', fontWeight: 'bold', margin: 0, textAlign: 'center' }}>Confirm Delete</h2>
+                        <p style={{ textAlign: 'center', fontSize: '14pt', color: colors.gray }}>Are you sure you want to delete this client? This action cannot be undone.</p>
+                        <div style={{ display: 'flex', gap: spacing.md }}>
+                            <button
+                                onClick={() => memberToDelete && handleDeleteMember(memberToDelete)}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px',
+                                    backgroundColor: colors.red || '#ef4444',
+                                    color: colors.white,
+                                    border: 'none',
+                                    borderRadius: '9999px',
+                                    fontSize: '14pt',
+                                    fontWeight: '700',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Delete
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowDeleteConfirm(false);
+                                    setMemberToDelete(null);
+                                }}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px',
+                                    backgroundColor: colors.black,
+                                    color: colors.white,
+                                    border: 'none',
+                                    borderRadius: '9999px',
+                                    fontSize: '14pt',
+                                    fontWeight: '700',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </ProtectedRoute >
     );
 }

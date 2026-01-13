@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { AuthProvider } from "@/contexts/AuthContext";
-import GlobalChat from "@/components/GlobalChat";
+import GlobalChat from "@/components/GlobalChatNew";
 
 export const metadata: Metadata = {
   title: "Chu Precision Health | Patient Portal",
