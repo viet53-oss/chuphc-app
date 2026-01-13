@@ -358,11 +358,13 @@ export default function GlobalChat() {
             const calorieMatch = query.match(/(\d+)\s*(cal|calorie)/i);
             const calories = calorieMatch ? parseInt(calorieMatch[1]) : 0;
 
+            const foodName = query.replace(/add|log|record/gi, '').trim();
             const { error } = await supabase.from('nutrition_logs').insert({
                 user_id: userId,
                 meal_type: mealType,
                 calories: calories,
-                notes: JSON.stringify({ items: [query.replace(/add|log|record/gi, '').trim()] }),
+                food_name: foodName,
+                notes: JSON.stringify({ items: [foodName] }),
                 logged_at: new Date().toISOString()
             });
 

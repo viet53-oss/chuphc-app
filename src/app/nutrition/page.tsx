@@ -278,6 +278,7 @@ export default function NutritionPage() {
                 user_id: user.id,
                 meal_type: 'Breakfast',
                 calories: calories,
+                food_name: selectedBreakfastItems.join(', '),
                 notes: JSON.stringify({
                     items: selectedBreakfastItems,
                     mood: breakfastMood
@@ -339,6 +340,7 @@ export default function NutritionPage() {
                 user_id: user.id,
                 meal_type: 'Lunch',
                 calories: calories,
+                food_name: selectedLunchItems.join(', '),
                 notes: JSON.stringify({
                     items: selectedLunchItems,
                     mood: lunchMood
@@ -391,6 +393,7 @@ export default function NutritionPage() {
                 user_id: user.id,
                 meal_type: 'Dinner',
                 calories: calories,
+                food_name: selectedDinnerItems.join(', '),
                 notes: JSON.stringify({
                     items: selectedDinnerItems,
                     mood: dinnerMood
@@ -443,6 +446,7 @@ export default function NutritionPage() {
                 user_id: user.id,
                 meal_type: 'Snack',
                 calories: calories,
+                food_name: selectedSnackItems.join(', '),
                 notes: JSON.stringify({
                     items: selectedSnackItems,
                     mood: snackMood
