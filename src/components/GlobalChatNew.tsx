@@ -531,12 +531,16 @@ export default function GlobalChat() {
             return;
         }
 
+        console.log('[clearChatHistory] Starting clear operation');
+
         // Get current user
         const { data: { user: currentUser } } = await supabase.auth.getUser();
         if (!currentUser) {
             console.error('[clearChatHistory] No user found');
             return;
         }
+
+        console.log('[clearChatHistory] User ID:', currentUser.id);
 
         // Delete all chat messages for this user
         const { error } = await supabase
@@ -546,9 +550,15 @@ export default function GlobalChat() {
 
         if (error) {
             console.error('[clearChatHistory] Failed to clear:', error);
+            console.error('[clearChatHistory] Error details:', {
+                message: error.message,
+                code: error.code,
+                hint: error.hint,
+                details: error.details
+            });
             setChatMessages(prev => [...prev, {
                 role: 'bot',
-                content: `⚠️ Failed to clear chat history: ${error.message}`
+                content: `⚠️ Failed to clear chat history: ${error.message || error.code || 'Unknown error'}`
             }]);
         } else {
             // Reset to default welcome message
