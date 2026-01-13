@@ -15,36 +15,7 @@ export default function StressPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xxl, width: '100%', padding: spacing.xs }}>
 
-                {/* Header Section */}
-                <section style={{
-                    border: '2px solid black',
-                    borderRadius: '12px',
-                    backgroundColor: colors.primaryTint,
-                    padding: spacing.lg,
-                    margin: spacing.xs,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: spacing.md
-                }}>
-                    <div style={{
-                        backgroundColor: colors.white,
-                        borderRadius: '12px',
-                        width: '80px',
-                        height: '80px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <Zap size={48} color={colors.teal} />
-                    </div>
-                    <h1 style={{ fontSize: fontSize.xl, fontWeight: 'bold', color: colors.secondary, margin: 0, textAlign: 'center' }}>
-                        Stress Management
-                    </h1>
-                    <p style={{ fontSize: fontSize.sm, color: colors.gray, margin: 0, textAlign: 'center' }}>
-                        Track and manage your stress levels
-                    </p>
-                </section>
+
 
                 {/* Stats Section */}
                 <section style={{
@@ -121,27 +92,27 @@ export default function StressPage() {
                 </section>
 
                 {/* Home Button */}
-                <Link href="/" style={{ textDecoration: 'none' }}>
-                    <button style={{
-                        width: '100%',
-                        padding: spacing.lg,
-                        backgroundColor: colors.black,
-                        color: colors.white,
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: fontSize.base,
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: spacing.sm,
-                        margin: spacing.xs
-                    }}>
-                        <Home size={20} />
-                        Back to Home
-                    </button>
-                </Link>
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '2px' }}>
+                    <Link href="/" style={{ textDecoration: 'none' }}>
+                        <button style={{
+                            padding: '8px 20px',
+                            backgroundColor: colors.black,
+                            color: colors.white,
+                            border: 'none',
+                            borderRadius: '9999px',
+                            fontSize: '15pt',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: spacing.sm
+                        }}>
+                            <Home size={20} />
+                            Home
+                        </button>
+                    </Link>
+                </div>
 
             </div>
         </ProtectedRoute>

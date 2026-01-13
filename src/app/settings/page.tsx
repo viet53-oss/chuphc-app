@@ -11,36 +11,7 @@ export default function SettingsPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.xxl, width: '100%', padding: spacing.xs }}>
 
-                {/* Header Section */}
-                <section style={{
-                    border: '2px solid black',
-                    borderRadius: '12px',
-                    backgroundColor: colors.primaryTint,
-                    padding: spacing.lg,
-                    margin: spacing.xs,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: spacing.md
-                }}>
-                    <div style={{
-                        backgroundColor: colors.white,
-                        borderRadius: '12px',
-                        width: '80px',
-                        height: '80px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <Settings size={48} color={colors.gray} />
-                    </div>
-                    <h1 style={{ fontSize: fontSize.xl, fontWeight: 'bold', color: colors.secondary, margin: 0, textAlign: 'center' }}>
-                        App Settings
-                    </h1>
-                    <p style={{ fontSize: fontSize.sm, color: colors.gray, margin: 0, textAlign: 'center' }}>
-                        Configure your application preferences
-                    </p>
-                </section>
+
 
                 {/* Settings Menu */}
                 <section style={{

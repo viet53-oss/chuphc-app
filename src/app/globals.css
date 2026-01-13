@@ -179,7 +179,7 @@ main {
 .pillar-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 2px;
 }
 
 a {

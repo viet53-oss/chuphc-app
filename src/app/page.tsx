@@ -1,6 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+
+
 import {
   Apple,
   Dumbbell,
@@ -8,7 +12,8 @@ import {
   Moon,
   Users,
   ShieldAlert,
-  Settings
+  Settings,
+
 } from 'lucide-react';
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -25,79 +30,105 @@ const PILLARS = [
 ];
 
 export default function Dashboard() {
-  const [dailySteps, setDailySteps] = useState(0);
-  const [isEditingSteps, setIsEditingSteps] = useState(false);
-  const [manualStepInput, setManualStepInput] = useState('');
-  const lastAccelRef = useRef({ x: 0, y: 0, z: 0, timestamp: 0 });
+  const { user } = useAuth();
+  const [dailyCalories, setDailyCalories] = useState<number>(0);
+  const [weeklyCalories, setWeeklyCalories] = useState<number>(0);
+  const [activityMinutes, setActivityMinutes] = useState(0);
+  const [todaySteps, setTodaySteps] = useState(0);
+  const [weekSteps, setWeekSteps] = useState(0);
 
-  // Accelerometer-based step counting
+  // Load Activity Data from Local Storage
   useEffect(() => {
-    let stepCount = 0;
-    const STEP_THRESHOLD = 1.2; // Acceleration threshold for detecting a step
-    const STEP_DELAY = 250; // Minimum ms between steps
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('chu_activity_logs');
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          const today = new Date();
+          const todayStr = today.toISOString().split('T')[0];
 
-    if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
-      const handleMotion = (event: DeviceMotionEvent) => {
-        const accel = event.accelerationIncludingGravity;
-        if (!accel) return;
+          // Today Stats
+          const todayData = data[todayStr] || { steps: 0, minutes: 0 };
+          setTodaySteps(todayData.steps || 0);
+          setActivityMinutes(todayData.minutes || 0);
 
-        const now = Date.now();
-        const timeDiff = now - lastAccelRef.current.timestamp;
+          // Week Stats (Monday Start)
+          const day = today.getDay();
+          const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+          const monday = new Date(today);
+          monday.setDate(diff); // Date of Monday
+          monday.setHours(0, 0, 0, 0);
 
-        if (timeDiff < STEP_DELAY) return;
-
-        // Calculate total acceleration magnitude
-        const x = accel.x || 0;
-        const y = accel.y || 0;
-        const z = accel.z || 0;
-        const magnitude = Math.sqrt(x * x + y * y + z * z);
-
-        // Detect significant movement (potential step)
-        const lastMagnitude = Math.sqrt(
-          lastAccelRef.current.x ** 2 +
-          lastAccelRef.current.y ** 2 +
-          lastAccelRef.current.z ** 2
-        );
-
-        if (Math.abs(magnitude - lastMagnitude) > STEP_THRESHOLD) {
-          stepCount++;
-          setDailySteps(prev => prev + 1);
-          lastAccelRef.current.timestamp = now;
+          let wSteps = 0;
+          Object.keys(data).forEach(dateStr => {
+            const date = new Date(dateStr);
+            date.setHours(0, 0, 0, 0); // Normalize time
+            if (date >= monday) {
+              wSteps += data[dateStr].steps || 0;
+            }
+          });
+          setWeekSteps(wSteps);
+        } catch (e) {
+          console.error("Failed to parse activity logs", e);
         }
-
-        lastAccelRef.current = { x, y, z, timestamp: now };
-      };
-
-      window.addEventListener('devicemotion', handleMotion);
-      return () => window.removeEventListener('devicemotion', handleMotion);
+      }
     }
   }, []);
 
-  // Manual step entry handler
-  const handleManualStepEntry = () => {
-    const steps = parseInt(manualStepInput);
-    if (!isNaN(steps) && steps >= 0) {
-      setDailySteps(steps);
-      setIsEditingSteps(false);
-      setManualStepInput('');
-    }
-  };
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchCalories = async () => {
+      // Today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Start of Week (Sunday)
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+
+      const { data: logs, error } = await supabase
+        .from('nutrition_logs')
+        .select('calories, logged_at')
+        .eq('user_id', user.id)
+        .gte('logged_at', startOfWeek.toISOString());
+
+      if (logs && !error) {
+        let daySum = 0;
+        let weekSum = 0;
+
+        logs.forEach(log => {
+          const logDate = new Date(log.logged_at);
+          weekSum += log.calories || 0;
+          if (logDate >= today) {
+            daySum += log.calories || 0;
+          }
+        });
+
+        setDailyCalories(daySum);
+        setWeeklyCalories(weekSum);
+      }
+    };
+
+    fetchCalories();
+  }, [user]);
+
 
   return (
     <ProtectedRoute>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', width: '100%', padding: '4px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', width: '100%', padding: '2px' }}>
 
         {/* HEADER SECTION */}
         <section style={{
           border: '2px solid black',
           borderRadius: '12px',
           backgroundColor: '#E8F5E9',
-          padding: '16px',
-          margin: '4px',
+          padding: '2px',
+          margin: '2px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '12px'
+          gap: '2px'
         }}>
 
 
@@ -130,106 +161,77 @@ export default function Dashboard() {
           </div>
 
           {/* Stats */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '2px',
               borderTop: '2px solid black',
               borderBottom: '2px solid black',
-              padding: '4px 8px',
+              padding: '2px',
               backgroundColor: 'white'
             }}>
-              <span style={{ fontSize: '18pt', fontWeight: 'bold', textTransform: 'uppercase' }}>PRECISION SCORE:</span>
-              <span style={{ fontSize: '18pt', fontWeight: 'bold' }}>84/100</span>
+              <span style={{ fontSize: '12pt', fontWeight: 'bold', textTransform: 'uppercase' }}>PRECISION SCORE:</span>
+              <span style={{ fontSize: '16pt', fontWeight: 'bold' }}>84/100</span>
             </div>
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '2px',
               borderTop: '2px solid black',
               borderBottom: '2px solid black',
-              padding: '4px 8px',
+              padding: '2px',
               backgroundColor: 'white'
             }}>
-              <span style={{ fontSize: '18pt', fontWeight: 'bold', textTransform: 'uppercase' }}>WEEKLY STATUS:</span>
-              <span style={{ fontSize: '18pt', fontWeight: 'bold' }}>On Target</span>
+              <span style={{ fontSize: '12pt', fontWeight: 'bold', textTransform: 'uppercase' }}>WEEKLY STATUS:</span>
+              <span style={{ fontSize: '14pt', fontWeight: 'bold' }}>On Target</span>
             </div>
           </div>
         </section>
 
-        {/* STEPS SECTION */}
-        <section style={{
-          border: '2px solid black',
-          borderRadius: '12px',
-          backgroundColor: 'white',
-          padding: '16px',
-          margin: '4px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '4px'
-        }}>
-          <p
-            style={{ fontSize: '30pt', fontWeight: 'bold', color: 'black', margin: 0, cursor: 'pointer' }}
-            onClick={() => {
-              setIsEditingSteps(true);
-              setManualStepInput(dailySteps.toString());
-            }}
-            title="Click to edit steps"
-          >
-            {isEditingSteps ? (
-              <input
-                type="number"
-                value={manualStepInput}
-                onChange={(e) => setManualStepInput(e.target.value)}
-                onBlur={handleManualStepEntry}
-                onKeyPress={(e) => e.key === 'Enter' && handleManualStepEntry()}
-                autoFocus
-                style={{
-                  fontSize: '30pt',
-                  fontWeight: 'bold',
-                  textAlign: 'center',
-                  border: '2px solid black',
-                  borderRadius: '8px',
-                  padding: '4px',
-                  width: '180px'
-                }}
-              />
-            ) : (
-              dailySteps.toLocaleString()
-            )}
-          </p>
-          <p style={{ fontSize: '18pt', fontWeight: 'bold', color: 'black', margin: 0 }}>
-            Steps
-          </p>
-          <p style={{ fontSize: '10pt', color: '#666', margin: 0, fontStyle: 'italic' }}>
-            {dailySteps > 0 ? 'Auto-tracking • Click to edit' : 'Click number to enter manually'}
-          </p>
-        </section>
+
 
         {/* BUTTONS SECTION */}
         <section style={{
           border: '2px solid black',
           borderRadius: '12px',
           backgroundColor: 'white',
-          padding: '16px',
-          margin: '4px'
+          padding: '2px',
+          margin: '2px'
         }}>
           <div className="pillar-grid">
             {PILLARS.map((p) => (
               <Link
                 href={p.link}
                 key={p.title}
-                className="app-section !p-4 flex items-center justify-between hover:bg-black/5 active:scale-95 transition-all"
+                className="app-section !p-[2px] flex items-center justify-between hover:bg-black/5 active:scale-95 transition-all"
                 style={{ borderLeft: `6px solid ${p.color}` }}
               >
-                <div className="flex items-center gap-2">
-                  <p.icon size={16} style={{ color: p.color }} />
-                  <h3 className="title-md">{p.title}</h3>
-                </div>
-                <span className="text-small font-bold" style={{ color: p.color }}>{p.status.toUpperCase()}</span>
+                {p.title === 'Activity' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                      <h3 style={{ fontSize: '14pt', fontWeight: 'bold', margin: 0 }}>{p.title}</h3>
+                      <span style={{ fontSize: '14pt', fontWeight: 'bold', color: p.color }}>{activityMinutes}m</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12pt', fontWeight: 'bold', color: p.color }}>TD: {todaySteps.toLocaleString()}</span>
+                      <span style={{ fontSize: '12pt', fontWeight: 'bold', color: p.color }}>WK: {weekSteps.toLocaleString()}</span>
+                    </div>
+                  </div>
+                ) : p.title === 'Nutrition' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <h3 style={{ fontSize: '14pt', fontWeight: 'bold', margin: 0 }}>{p.title}</h3>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12pt', fontWeight: 'bold', color: p.color }}>TD: {dailyCalories}</span>
+                      <span style={{ fontSize: '12pt', fontWeight: 'bold', color: p.color }}>WK: {weeklyCalories}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <h3 style={{ fontSize: '14pt', fontWeight: 'bold', margin: 0 }}>{p.title}</h3>
+                    <span style={{ fontSize: '12pt', fontWeight: 'bold', color: p.color }}>{p.status.toUpperCase()}</span>
+                  </>
+                )}
               </Link>
             ))}
           </div>
