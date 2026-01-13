@@ -59,13 +59,20 @@ export default function GlobalChat() {
 
     const saveChatMessage = async (role: string, content: string): Promise<boolean> => {
         if (!user) return false;
+
+        // Use current time, but let the DB confirm insertion
         const timestamp = new Date().toISOString();
-        const { error } = await supabase.from('chat_messages').insert([{
-            user_id: user.id,
-            role,
-            content,
-            created_at: timestamp
-        }]);
+
+        const { data, error } = await supabase
+            .from('chat_messages')
+            .insert([{
+                user_id: user.id,
+                role,
+                content,
+                created_at: timestamp
+            }])
+            .select() // Return the inserted row to verify success
+            .single();
 
         if (error) {
             console.error('Failed to save chat message:', error);
@@ -77,19 +84,10 @@ export default function GlobalChat() {
             return false;
         }
 
-        // Verify persistence (Debug for RLS issues)
-        // Check if we can read back what we just wrote
-        const { count } = await supabase
-            .from('chat_messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-            .eq('created_at', timestamp);
-
-        if (count === 0) {
-            setChatMessages(prev => [...prev, {
-                role: 'bot',
-                content: `⚠️ Privacy Warning: Message saved, but you cannot view it. This suggests a Database Permission (RLS) issue.`
-            }]);
+        if (!data) {
+            console.error('Message saved but no data returned. RLS might be blocking read.');
+            // Optionally warn user, but usually if error is null and data is null, something weird happened.
+            // But valid insert usually returns data if .select() is used.
             return false;
         }
 
@@ -144,6 +142,7 @@ export default function GlobalChat() {
 
     const executeAction = async (query: string, data: any): Promise<string | null> => {
         if (!user) return null;
+        const userId = user.id; // Capture ID to satisfy TS narrowing across async boundaries
 
         const lowerQuery = query.toLowerCase();
 
@@ -155,7 +154,7 @@ export default function GlobalChat() {
             // Check for Goals first
             if (lowerQuery.includes('goal')) {
                 const { error } = await supabase.from('goals').insert({
-                    user_id: user.id,
+                    user_id: userId,
                     category: 'General',
                     title: query.replace(/add|log|record|goal/gi, '').trim(),
                     start_date: new Date().toISOString().split('T')[0]
@@ -176,7 +175,7 @@ export default function GlobalChat() {
             const calories = calorieMatch ? parseInt(calorieMatch[1]) : 0;
 
             const { error } = await supabase.from('nutrition_logs').insert({
-                user_id: user.id,
+                user_id: userId,
                 meal_type: mealType,
                 calories: calories,
                 notes: JSON.stringify({ items: [query.replace(/add|log|record/gi, '').trim()] }),
@@ -185,18 +184,6 @@ export default function GlobalChat() {
 
             if (error) return `Sorry, I couldn't log that meal: ${error.message}`;
             return `✅ Successfully logged ${mealType} (${calories} cal)!`;
-
-            if (lowerQuery.includes('goal')) {
-                const { error } = await supabase.from('goals').insert({
-                    user_id: user.id,
-                    category: 'General',
-                    title: query.replace(/add|log|record|goal/gi, '').trim(),
-                    start_date: new Date().toISOString().split('T')[0]
-                });
-
-                if (error) return `Sorry, I couldn't create that goal: ${error.message}`;
-                return `✅ Goal created successfully!`;
-            }
         }
 
         // DELETE/REMOVE actions
