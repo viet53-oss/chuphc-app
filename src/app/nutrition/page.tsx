@@ -673,7 +673,7 @@ export default function NutritionPage() {
                                 color: colors.white,
                                 border: 'none',
                                 borderRadius: '9999px',
-                                fontSize: '14pt',
+                                fontSize: '15pt',
                                 fontWeight: '700',
                                 cursor: 'pointer',
                                 display: 'flex',
@@ -871,7 +871,7 @@ export default function NutritionPage() {
                     {/* Period Summary */}
 
                     {mealLog.length === 0 ? (
-                        <p style={{ fontSize: '14pt', color: colors.gray, textAlign: 'center', padding: '2px' }}>
+                        <p style={{ fontSize: '15pt', color: colors.gray, textAlign: 'center', padding: '2px' }}>
                             No meals logged yet {viewMode === 'today' ? 'today' : 'in this period'}
                         </p>
                     ) : viewMode !== 'today' ? (
@@ -889,7 +889,7 @@ export default function NutritionPage() {
                                 return (
                                     <div key={type} style={{ padding: spacing.md, backgroundColor: colors.primaryTint, borderRadius: '8px', border: '2px solid black', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '14pt', fontWeight: 'bold', color }}>{type}: <span style={{ color: 'black' }}>{count} meals</span></span>
+                                            <span style={{ fontSize: '15pt', fontWeight: 'bold', color }}>{type}: <span style={{ color: 'black' }}>{count} meals</span></span>
                                             <span style={{ fontSize: '12pt', fontWeight: 'bold' }}>{totalCals} cal</span>
                                         </div>
                                         <div style={{ fontSize: '12pt', color: colors.secondary }}>
@@ -941,7 +941,7 @@ export default function NutritionPage() {
                                         {/* Row 1: Type, Time, Calories */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                             <span style={{
-                                                fontSize: '16pt',
+                                                fontSize: '15pt',
                                                 fontWeight: 'bold',
                                                 color: (() => {
                                                     const typeColors: Record<string, string> = {
@@ -955,7 +955,7 @@ export default function NutritionPage() {
                                             }}>
                                                 {meal.type}
                                             </span>
-                                            <span style={{ fontSize: '14pt', fontWeight: 'bold', color: colors.secondary }}>
+                                            <span style={{ fontSize: '15pt', fontWeight: 'bold', color: colors.secondary }}>
                                                 {meal.time}
                                             </span>
                                             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -994,7 +994,7 @@ export default function NutritionPage() {
                                         </div>
 
                                         {/* Row 2: Items */}
-                                        <div style={{ fontSize: '14pt', color: colors.gray }}>
+                                        <div style={{ fontSize: '15pt', color: colors.gray }}>
                                             {meal.items.length > 0 ? meal.items.join(', ') : 'No items logged'}
                                         </div>
                                     </div>
