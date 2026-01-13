@@ -112,8 +112,8 @@ export default function ActivityPage() {
                             borderRadius: '8px',
                             textAlign: 'center'
                         }}>
-                            <p style={{ fontSize: fontSize.xs, color: colors.gray, margin: 0 }}>Minutes</p>
-                            <p style={{ fontSize: fontSize.xxl, fontWeight: 'bold', margin: 0 }}>{minutesActive}</p>
+                            <p style={{ fontSize: fontSize.xs, color: colors.gray, margin: 0 }}>Steps</p>
+                            <p style={{ fontSize: fontSize.xxl, fontWeight: 'bold', margin: 0 }}>{totalSteps.toLocaleString()}</p>
                         </div>
                         <div style={{
                             padding: spacing.md,
@@ -123,6 +123,7 @@ export default function ActivityPage() {
                         }}>
                             <p style={{ fontSize: fontSize.xs, color: colors.gray, margin: 0 }}>Workouts</p>
                             <p style={{ fontSize: fontSize.xxl, fontWeight: 'bold', margin: 0 }}>{workoutsCompleted}</p>
+                            <p style={{ fontSize: fontSize.xs, color: colors.gray, margin: '4px 0 0 0' }}>{minutesActive} min</p>
                         </div>
                     </div>
                 </section>
