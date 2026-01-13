@@ -132,7 +132,11 @@ export default function GlobalChat() {
 
             if (nutritionLogs.length > 0) {
                 const found = nutritionLogs.some((item: any) => {
-                    // Check meal_name
+                    // Check food_name (new field)
+                    if (item.food_name?.toLowerCase().includes(foodItem)) {
+                        return true;
+                    }
+                    // Check meal_name (legacy field)
                     if (item.meal_name?.toLowerCase().includes(foodItem)) {
                         return true;
                     }
