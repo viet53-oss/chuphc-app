@@ -127,10 +127,34 @@ export default function GlobalChat() {
         const foodMatch = lowerQuery.match(/(?:have|eat|ate)\s+(\w+)/);
         if (foodMatch) {
             const foodItem = foodMatch[1];
+            console.log('[handleLocalQuery] Searching for food:', foodItem);
+            console.log('[handleLocalQuery] Sample nutrition log:', nutritionLogs[0]);
+
             if (nutritionLogs.length > 0) {
-                const found = nutritionLogs.some((item: any) =>
-                    item.meal_name?.toLowerCase().includes(foodItem)
-                );
+                const found = nutritionLogs.some((item: any) => {
+                    // Check meal_name
+                    if (item.meal_name?.toLowerCase().includes(foodItem)) {
+                        return true;
+                    }
+                    // Check notes field (might contain food name as JSON)
+                    if (item.notes) {
+                        try {
+                            const notes = typeof item.notes === 'string' ? JSON.parse(item.notes) : item.notes;
+                            const notesStr = JSON.stringify(notes).toLowerCase();
+                            if (notesStr.includes(foodItem)) {
+                                return true;
+                            }
+                        } catch (e) {
+                            // If notes is not JSON, check as string
+                            if (item.notes.toLowerCase().includes(foodItem)) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                });
+
+                console.log('[handleLocalQuery] Found:', found);
                 return found
                     ? `Yes, you had ${foodItem} today.`
                     : `No, I don't see ${foodItem} in your nutrition log today.`;
