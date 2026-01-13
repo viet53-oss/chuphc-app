@@ -196,7 +196,7 @@ a {
   color: #ffffff;
   border-radius: 9999px;
   padding: 10px;
-  font-size: 14pt;
+  font-size: 18pt;
   font-weight: 700;
   border: none;
   cursor: pointer;
@@ -208,6 +208,11 @@ a {
 
 .btn-logout:hover {
   opacity: 0.8;
+}
+
+/* All buttons use 18pt font */
+button {
+  font-size: 18pt !important;
 }
 
 /* DASHBOARD HEADER - ALWAYS CENTERED STACK */

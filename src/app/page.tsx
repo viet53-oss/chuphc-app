@@ -210,7 +210,7 @@ export default function Dashboard() {
                 {p.title === 'Activity' ? (
                   <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                      <h3 style={{ fontSize: '14pt', fontWeight: 'bold', margin: 0 }}>{p.title}</h3>
+                      <h3 style={{ fontSize: '20pt', fontWeight: 'bold', margin: 0 }}>{p.title}</h3>
                       <span style={{ fontSize: '14pt', fontWeight: 'bold', color: p.color }}>{activityMinutes}m</span>
                     </div>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -220,7 +220,7 @@ export default function Dashboard() {
                   </div>
                 ) : p.title === 'Nutrition' ? (
                   <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                    <h3 style={{ fontSize: '14pt', fontWeight: 'bold', margin: 0 }}>{p.title}</h3>
+                    <h3 style={{ fontSize: '20pt', fontWeight: 'bold', margin: 0 }}>{p.title}</h3>
                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                       <span style={{ fontSize: '12pt', fontWeight: 'bold', color: p.color }}>TD: {dailyCalories}</span>
                       <span style={{ fontSize: '12pt', fontWeight: 'bold', color: p.color }}>WK: {weeklyCalories}</span>
@@ -228,7 +228,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <>
-                    <h3 style={{ fontSize: '14pt', fontWeight: 'bold', margin: 0 }}>{p.title}</h3>
+                    <h3 style={{ fontSize: '20pt', fontWeight: 'bold', margin: 0 }}>{p.title}</h3>
                     <span style={{ fontSize: '12pt', fontWeight: 'bold', color: p.color }}>{p.status.toUpperCase()}</span>
                   </>
                 )}
