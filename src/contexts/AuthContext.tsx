@@ -52,9 +52,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const handleSignOut = async () => {
-        await auth.signOut();
-        setIsAdmin(false); // Reset admin mode on logout
-        router.push('/login');
+        try {
+            await auth.signOut();
+        } catch (error) {
+            console.error('Error signing out:', error);
+            // We continue to force logout client-side even if server fails
+        } finally {
+            setIsAdmin(false); // Reset admin mode on logout
+            router.push('/login');
+            router.refresh(); // Ensure strict refresh to clear any cached auth state
+        }
     };
 
     return (

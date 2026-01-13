@@ -58,11 +58,12 @@ export default function LoginPage() {
     return (
         <div style={{
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'center',
             minHeight: '100vh',
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
             padding: spacing.md,
+            paddingTop: '64px',
             backdropFilter: 'blur(4px)'
         }}>
             <div style={{
