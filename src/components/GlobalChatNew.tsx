@@ -48,6 +48,11 @@ export default function GlobalChat() {
             }));
             if (formattedMessages.length > 0) {
                 setChatMessages(formattedMessages);
+            } else {
+                // Reset to default if no history found for this user
+                setChatMessages([
+                    { role: 'bot', content: "Hello! I'm your Chu Health Assistant. Ask me anything about your health!" }
+                ]);
             }
         }
     };
