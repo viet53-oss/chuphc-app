@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { MessageCircle, X, Mic, Volume2, VolumeX, Send, Download } from 'lucide-react';
+import { MessageCircle, X, Mic, Volume2, VolumeX, Send, Download, Trash2 } from 'lucide-react';
 import { colors, spacing, fontSize } from '@/lib/design-system';
 
 import { getGeminiResponse } from '@/app/chat-actions';
@@ -526,6 +526,40 @@ export default function GlobalChat() {
         URL.revokeObjectURL(url);
     };
 
+    const clearChatHistory = async () => {
+        if (!confirm('Are you sure you want to clear all chat history? This cannot be undone.')) {
+            return;
+        }
+
+        // Get current user
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!currentUser) {
+            console.error('[clearChatHistory] No user found');
+            return;
+        }
+
+        // Delete all chat messages for this user
+        const { error } = await supabase
+            .from('chat_messages')
+            .delete()
+            .eq('user_id', currentUser.id);
+
+        if (error) {
+            console.error('[clearChatHistory] Failed to clear:', error);
+            setChatMessages(prev => [...prev, {
+                role: 'bot',
+                content: `⚠️ Failed to clear chat history: ${error.message}`
+            }]);
+        } else {
+            // Reset to default welcome message
+            setChatMessages([{
+                role: 'bot',
+                content: "Hello! I'm your Chu Health Assistant. Ask me anything about your health!"
+            }]);
+            console.log('[clearChatHistory] Chat history cleared successfully');
+        }
+    };
+
     const handleQuickAction = (action: string) => {
         handleVoiceInput(action);
     };
@@ -608,6 +642,9 @@ export default function GlobalChat() {
                                 </button>
                                 <button onClick={exportChat} style={{ backgroundColor: colors.black, color: 'white', borderRadius: '50%', padding: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Export Chat">
                                     <Download size={20} />
+                                </button>
+                                <button onClick={clearChatHistory} style={{ backgroundColor: colors.red, color: 'white', borderRadius: '50%', padding: '8px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Clear Chat History">
+                                    <Trash2 size={20} />
                                 </button>
                                 <button onClick={() => setIsChatOpen(false)} style={{ backgroundColor: 'black', color: 'white', borderRadius: '9999px', padding: '8px 16px', fontWeight: 'bold', fontSize: fontSize.sm, border: 'none', cursor: 'pointer' }}>
                                     CLOSE
