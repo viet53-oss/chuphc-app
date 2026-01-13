@@ -122,75 +122,12 @@ export default function ActivityPage() {
                             textAlign: 'center'
                         }}>
                             <p style={{ fontSize: fontSize.xs, color: colors.gray, margin: 0 }}>Workouts</p>
-                            <p style={{ fontSize: fontSize.xxl, fontWeight: 'bold', margin: 0 }}>{workoutsCompleted}</p>
-                            <p style={{ fontSize: fontSize.xs, color: colors.gray, margin: '4px 0 0 0' }}>{minutesActive} min</p>
+                            <p style={{ fontSize: fontSize.xxl, fontWeight: 'bold', margin: 0 }}>{workoutsCompleted} / {minutesActive} min</p>
                         </div>
                     </div>
                 </section>
 
-                {/* STEPS SECTION */}
-                <section style={{
-                    border: '2px solid black',
-                    borderRadius: '12px',
-                    backgroundColor: 'white',
-                    padding: '2px',
-                    margin: '2px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '2px'
-                }}>
-                    <div style={{ textAlign: 'center', borderBottom: '1px solid #eee', paddingBottom: '2px' }}>
-                        <h2 style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0 }}>Total Steps: {totalSteps.toLocaleString()}</h2>
-                    </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}>
-                        {/* Left Column: Phone Auto Track */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRight: '1px solid #ccc', paddingRight: '2px' }}>
-                            <h3 style={{ fontSize: '12pt', fontWeight: 'bold', textAlign: 'center', color: '#666', marginBottom: '2px' }}>Phone Auto Track</h3>
-                            <p style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0 }}>{autoSteps.toLocaleString()}</p>
-                            <p style={{ fontSize: '12pt', color: '#999', fontStyle: 'italic' }}>Live</p>
-                        </div>
-
-                        {/* Right Column: Manually Add */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                            <h3 style={{ fontSize: '12pt', fontWeight: 'bold', textAlign: 'center', color: '#666', marginBottom: '2px' }}>Manually Add</h3>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                                <input
-                                    type="number"
-                                    value={manualInput}
-                                    onChange={(e) => setManualInput(e.target.value)}
-                                    placeholder="0"
-                                    style={{
-                                        fontSize: '16pt',
-                                        padding: '2px',
-                                        width: '100px',
-                                        textAlign: 'center',
-                                        borderRadius: '8px',
-                                        border: '2px solid #ccc'
-                                    }}
-                                />
-                                <button
-                                    onClick={handleAddManualSteps}
-                                    style={{
-                                        backgroundColor: 'black',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '50%',
-                                        width: '48px',
-                                        height: '48px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    <Plus size={24} />
-                                </button>
-                            </div>
-                            <p style={{ fontSize: '12pt', color: '#666' }}>Manual Total: <span style={{ fontSize: '16pt', fontWeight: 'bold', color: 'black' }}>{manualSteps.toLocaleString()}</span></p>
-                        </div>
-                    </div>
-                </section>
 
                 {/* Quick Actions */}
                 <section style={{
