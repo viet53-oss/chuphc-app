@@ -124,26 +124,42 @@ export default function GlobalChat() {
 
         // ADD/LOG actions
         if (lowerQuery.includes('add') || lowerQuery.includes('log') || lowerQuery.includes('record')) {
-            if (lowerQuery.includes('meal') || lowerQuery.includes('food') || lowerQuery.includes('ate') || lowerQuery.includes('breakfast') || lowerQuery.includes('lunch') || lowerQuery.includes('dinner') || lowerQuery.includes('snack')) {
-                let mealType = 'Snack';
-                if (lowerQuery.includes('breakfast')) mealType = 'Breakfast';
-                else if (lowerQuery.includes('lunch')) mealType = 'Lunch';
-                else if (lowerQuery.includes('dinner')) mealType = 'Dinner';
+            // Handle 'Log Out' exception
+            if (lowerQuery.includes('logout') || lowerQuery.includes('log out')) return null;
 
-                const calorieMatch = query.match(/(\d+)\s*(cal|calorie)/i);
-                const calories = calorieMatch ? parseInt(calorieMatch[1]) : 0;
-
-                const { error } = await supabase.from('nutrition_logs').insert({
+            // Check for Goals first
+            if (lowerQuery.includes('goal')) {
+                const { error } = await supabase.from('goals').insert({
                     user_id: user.id,
-                    meal_type: mealType,
-                    calories: calories,
-                    notes: JSON.stringify({ items: [query] }),
-                    logged_at: new Date().toISOString()
+                    category: 'General',
+                    title: query.replace(/add|log|record|goal/gi, '').trim(),
+                    start_date: new Date().toISOString().split('T')[0]
                 });
 
-                if (error) return `Sorry, I couldn't log that meal: ${error.message}`;
-                return `✅ Successfully logged ${mealType} with ${calories} calories!`;
+                if (error) return `Sorry, I couldn't set that goal: ${error.message}`;
+                return `✅ Successfully set new goal!`;
             }
+
+            // Default to Food/Meal Logging for other "add/log" commands
+            // (e.g. "Log many banana", "Add 500 cal sandwich")
+            let mealType = 'Snack';
+            if (lowerQuery.includes('breakfast')) mealType = 'Breakfast';
+            else if (lowerQuery.includes('lunch')) mealType = 'Lunch';
+            else if (lowerQuery.includes('dinner')) mealType = 'Dinner';
+
+            const calorieMatch = query.match(/(\d+)\s*(cal|calorie)/i);
+            const calories = calorieMatch ? parseInt(calorieMatch[1]) : 0;
+
+            const { error } = await supabase.from('nutrition_logs').insert({
+                user_id: user.id,
+                meal_type: mealType,
+                calories: calories,
+                notes: JSON.stringify({ items: [query.replace(/add|log|record/gi, '').trim()] }),
+                logged_at: new Date().toISOString()
+            });
+
+            if (error) return `Sorry, I couldn't log that meal: ${error.message}`;
+            return `✅ Successfully logged ${mealType} (${calories} cal)!`;
 
             if (lowerQuery.includes('goal')) {
                 const { error } = await supabase.from('goals').insert({
