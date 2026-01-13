@@ -8,7 +8,7 @@ import { colors, spacing, fontSize } from '@/lib/design-system';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { createClient } from '@supabase/supabase-js';
-import { adminUpdateUserPassword, adminCreateUser } from './actions';
+import { adminUpdateUserPassword, adminCreateUser, adminDeleteUser } from './actions';
 
 interface Member {
     id: string;
