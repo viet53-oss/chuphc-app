@@ -111,41 +111,56 @@ export default function GlobalChat() {
 
     const handleLocalQuery = (query: string, clientData: any): string => {
         const lowerQuery = query.toLowerCase();
+        console.log('[handleLocalQuery] Query:', query);
+        console.log('[handleLocalQuery] Client data:', {
+            hasNutrition: !!clientData?.nutrition,
+            nutritionCount: clientData?.nutrition?.length || 0,
+            hasExercise: !!clientData?.exercise,
+            exerciseCount: clientData?.exercise?.length || 0
+        });
 
-        // Check nutrition data
-        if (clientData?.nutrition && clientData.nutrition.length > 0) {
-            // Questions like "did I have banana today?"
-            const foodMatch = lowerQuery.match(/(?:have|eat|ate)\s+(\w+)/);
-            if (foodMatch) {
-                const foodItem = foodMatch[1];
+        // Questions like "did I have banana today?"
+        const foodMatch = lowerQuery.match(/(?:have|eat|ate)\s+(\w+)/);
+        if (foodMatch) {
+            const foodItem = foodMatch[1];
+            if (clientData?.nutrition && clientData.nutrition.length > 0) {
                 const found = clientData.nutrition.some((item: any) =>
                     item.food_name?.toLowerCase().includes(foodItem)
                 );
                 return found
                     ? `Yes, you had ${foodItem} today.`
                     : `No, I don't see ${foodItem} in your nutrition log today.`;
+            } else {
+                return `You haven't logged any food today, so I can't confirm if you had ${foodItem}.`;
             }
+        }
 
-            // Questions like "what did I eat today?"
-            if (lowerQuery.includes('what did i eat') || lowerQuery.includes('what have i eaten')) {
+        // Questions like "what did I eat today?"
+        if (lowerQuery.includes('what did i eat') || lowerQuery.includes('what have i eaten')) {
+            if (clientData?.nutrition && clientData.nutrition.length > 0) {
                 const foods = clientData.nutrition.map((item: any) => item.food_name).filter(Boolean);
                 return foods.length > 0
                     ? `Today you ate: ${foods.join(', ')}.`
                     : "You haven't logged any food today.";
+            } else {
+                return "You haven't logged any food today.";
             }
         }
 
-        // Check exercise data
-        if (clientData?.exercise && clientData.exercise.length > 0) {
-            if (lowerQuery.includes('did i exercise') || lowerQuery.includes('did i work out')) {
+        // Exercise questions
+        if (lowerQuery.includes('did i exercise') || lowerQuery.includes('did i work out')) {
+            if (clientData?.exercise && clientData.exercise.length > 0) {
                 const exercises = clientData.exercise.map((item: any) => item.exercise_name).filter(Boolean);
                 return exercises.length > 0
                     ? `Yes, you did: ${exercises.join(', ')}.`
                     : "You haven't logged any exercise today.";
+            } else {
+                return "You haven't logged any exercise today.";
             }
         }
 
         // Default: couldn't answer locally
+        console.log('[handleLocalQuery] No matching pattern, returning empty');
         return '';
     };
 
