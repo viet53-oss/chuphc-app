@@ -59,11 +59,16 @@ export default function GlobalChat() {
 
     const saveChatMessage = async (role: string, content: string) => {
         if (!user) return;
-        await supabase.from('chat_messages').insert([{
+        const { error } = await supabase.from('chat_messages').insert([{
             user_id: user.id,
             role,
-            content
+            content,
+            created_at: new Date().toISOString()
         }]);
+
+        if (error) {
+            console.error('Failed to save chat message:', error);
+        }
     };
 
     const handleVoiceInput = async (text: string) => {
