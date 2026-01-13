@@ -62,13 +62,23 @@ USER MESSAGE: "${message}"
             } catch (error) {
                 console.error(`Gemini Attempt ${attempt + 1} failed:`, error);
                 lastError = error;
-                await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                // If it's a 429 (Too Many Requests), wait longer
+                if (error.message?.includes('429') || error.status === 429) {
+                    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5s specifically for rate limits
+                } else {
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+                }
             }
         }
         throw lastError;
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Gemini API Error (Final):', error);
+
+        if (error.message?.includes('429') || error.status === 429) {
+            return "I'm receiving too many requests right now. Please wait a minute and try again.";
+        }
+
         return "I'm having trouble connecting to my brain right now. Please try again in a moment.";
     }
 }
