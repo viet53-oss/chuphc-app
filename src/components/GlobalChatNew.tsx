@@ -59,11 +59,12 @@ export default function GlobalChat() {
 
     const saveChatMessage = async (role: string, content: string): Promise<boolean> => {
         if (!user) return false;
+        const timestamp = new Date().toISOString();
         const { error } = await supabase.from('chat_messages').insert([{
             user_id: user.id,
             role,
             content,
-            created_at: new Date().toISOString()
+            created_at: timestamp
         }]);
 
         if (error) {
@@ -75,6 +76,23 @@ export default function GlobalChat() {
             }]);
             return false;
         }
+
+        // Verify persistence (Debug for RLS issues)
+        // Check if we can read back what we just wrote
+        const { count } = await supabase
+            .from('chat_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('created_at', timestamp);
+
+        if (count === 0) {
+            setChatMessages(prev => [...prev, {
+                role: 'bot',
+                content: `⚠️ Privacy Warning: Message saved, but you cannot view it. This suggests a Database Permission (RLS) issue.`
+            }]);
+            return false;
+        }
+
         return true;
     };
 
