@@ -651,12 +651,12 @@ export default function NutritionPage() {
                                         key={mode}
                                         onClick={() => setViewMode(mode.toLowerCase() as any)}
                                         style={{
-                                            padding: '4px 12px',
-                                            borderRadius: '16px',
+                                            padding: '2px 8px',
+                                            borderRadius: '12px',
                                             border: 'none',
                                             backgroundColor: viewMode === mode.toLowerCase() ? colors.black : '#e5e7eb',
                                             color: viewMode === mode.toLowerCase() ? 'white' : 'black',
-                                            fontSize: '10pt',
+                                            fontSize: '8px',
                                             fontWeight: 'bold',
                                             cursor: 'pointer'
                                         }}
@@ -718,11 +718,11 @@ export default function NutritionPage() {
                     padding: '2px',
                     margin: '2px'
                 }}>
-                    <h2 style={{ fontSize: '16pt', fontWeight: 'bold', marginBottom: '2px' }}>Meals</h2>
+                    <h2 style={{ fontSize: '18pt', fontWeight: 'bold', marginBottom: '2px' }}>Meals</h2>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px' }}>
                         <button
                             onClick={() => {
-                                setShowBreakfastPopup(true);
+                                if (viewMode === 'today') setShowBreakfastPopup(true);
                             }}
                             style={{
                                 padding: '10px',
@@ -743,19 +743,19 @@ export default function NutritionPage() {
                         >
                             <span>Breakfast</span>
                             {viewMode !== 'today' ? (
-                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '12pt', fontWeight: '500', padding: '0 10px', marginTop: '4px' }}>
+                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '18pt', fontWeight: 'bold', padding: '0 10px', marginTop: '4px' }}>
                                     <span>{mealLog.filter(m => m.type === 'Breakfast').length} meals</span>
                                     <span>{mealLog.filter(m => m.type === 'Breakfast').reduce((sum, m) => sum + (m.calories || 0), 0)} cal</span>
                                 </div>
                             ) : (
-                                <span style={{ fontSize: '12pt', fontWeight: '500' }}>
+                                <span style={{ fontSize: '18pt', fontWeight: 'bold' }}>
                                     {mealLog.filter(m => m.type === 'Breakfast').reduce((sum, m) => sum + (m.calories || 0), 0)} cal
                                 </span>
                             )}
                         </button>
                         <button
                             onClick={() => {
-                                setShowLunchPopup(true);
+                                if (viewMode === 'today') setShowLunchPopup(true);
                             }}
                             style={{
                                 padding: '10px',
@@ -776,19 +776,19 @@ export default function NutritionPage() {
                         >
                             <span>Lunch</span>
                             {viewMode !== 'today' ? (
-                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '12pt', fontWeight: '500', padding: '0 10px', marginTop: '4px' }}>
+                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '18pt', fontWeight: 'bold', padding: '0 10px', marginTop: '4px' }}>
                                     <span>{mealLog.filter(m => m.type === 'Lunch').length} meals</span>
                                     <span>{mealLog.filter(m => m.type === 'Lunch').reduce((sum, m) => sum + (m.calories || 0), 0)} cal</span>
                                 </div>
                             ) : (
-                                <span style={{ fontSize: '12pt', fontWeight: '500' }}>
+                                <span style={{ fontSize: '18pt', fontWeight: 'bold' }}>
                                     {mealLog.filter(m => m.type === 'Lunch').reduce((sum, m) => sum + (m.calories || 0), 0)} cal
                                 </span>
                             )}
                         </button>
                         <button
                             onClick={() => {
-                                setShowDinnerPopup(true);
+                                if (viewMode === 'today') setShowDinnerPopup(true);
                             }}
                             style={{
                                 padding: '10px',
@@ -809,19 +809,19 @@ export default function NutritionPage() {
                         >
                             <span>Dinner</span>
                             {viewMode !== 'today' ? (
-                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '12pt', fontWeight: '500', padding: '0 10px', marginTop: '4px' }}>
+                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '18pt', fontWeight: 'bold', padding: '0 10px', marginTop: '4px' }}>
                                     <span>{mealLog.filter(m => m.type === 'Dinner').length} meals</span>
                                     <span>{mealLog.filter(m => m.type === 'Dinner').reduce((sum, m) => sum + (m.calories || 0), 0)} cal</span>
                                 </div>
                             ) : (
-                                <span style={{ fontSize: '12pt', fontWeight: '500' }}>
+                                <span style={{ fontSize: '18pt', fontWeight: 'bold' }}>
                                     {mealLog.filter(m => m.type === 'Dinner').reduce((sum, m) => sum + (m.calories || 0), 0)} cal
                                 </span>
                             )}
                         </button>
                         <button
                             onClick={() => {
-                                setShowSnackPopup(true);
+                                if (viewMode === 'today') setShowSnackPopup(true);
                             }}
                             style={{
                                 padding: '10px',
@@ -842,12 +842,12 @@ export default function NutritionPage() {
                         >
                             <span>Snack</span>
                             {viewMode !== 'today' ? (
-                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '12pt', fontWeight: '500', padding: '0 10px', marginTop: '4px' }}>
+                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '18pt', fontWeight: 'bold', padding: '0 10px', marginTop: '4px' }}>
                                     <span>{mealLog.filter(m => m.type === 'Snack').length} meals</span>
                                     <span>{mealLog.filter(m => m.type === 'Snack').reduce((sum, m) => sum + (m.calories || 0), 0)} cal</span>
                                 </div>
                             ) : (
-                                <span style={{ fontSize: '12pt', fontWeight: '500' }}>
+                                <span style={{ fontSize: '18pt', fontWeight: 'bold' }}>
                                     {mealLog.filter(m => m.type === 'Snack').reduce((sum, m) => sum + (m.calories || 0), 0)} cal
                                 </span>
                             )}
@@ -864,7 +864,7 @@ export default function NutritionPage() {
                     padding: '2px',
                     margin: '2px'
                 }}>
-                    <h2 style={{ fontSize: '16pt', fontWeight: 'bold', marginBottom: '2px' }}>
+                    <h2 style={{ fontSize: '18pt', fontWeight: 'bold', marginBottom: '2px' }}>
                         {viewMode === 'today' ? "Meals Log" : viewMode === 'week' ? "Week Log" : "Month Log"}
                     </h2>
 
@@ -1004,27 +1004,7 @@ export default function NutritionPage() {
                     )}
                 </section>
 
-                {/* Home Button */}
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '2px' }}>
-                    <Link href="/" style={{ textDecoration: 'none' }}>
-                        <button style={{
-                            padding: '10px',
-                            backgroundColor: colors.black,
-                            color: colors.white,
-                            border: 'none',
-                            borderRadius: '9999px',
-                            fontSize: '14pt',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: spacing.sm
-                        }}>
-                            Home
-                        </button>
-                    </Link>
-                </div>
+
 
                 {/* Custom Delete Confirmation Popup */}
                 {showDeleteConfirm && (
