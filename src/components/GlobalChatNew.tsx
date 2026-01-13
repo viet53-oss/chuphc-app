@@ -64,6 +64,7 @@ export default function GlobalChat() {
         }
 
         console.log(`[saveChatMessage] Saving ${role} message:`, content.substring(0, 50));
+        console.log(`[saveChatMessage] User ID:`, user.id);
 
         const { data, error } = await supabase
             .from('chat_messages')
@@ -78,10 +79,16 @@ export default function GlobalChat() {
 
         if (error) {
             console.error('[saveChatMessage] Failed to save:', error);
+            console.error('[saveChatMessage] Error details:', {
+                message: error.message,
+                code: error.code,
+                hint: error.hint,
+                details: error.details
+            });
             // Visual feedback for debugging
             setChatMessages(prev => [...prev, {
                 role: 'bot',
-                content: `⚠️ System Error: Failed to save message. Reason: ${error.message || 'Unknown'}`
+                content: `⚠️ System Error: Failed to save message. Reason: ${error.message || error.code || 'Unknown'}`
             }]);
             return false;
         }
