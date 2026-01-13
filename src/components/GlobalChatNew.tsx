@@ -16,7 +16,7 @@ export default function GlobalChat() {
     const [textInput, setTextInput] = useState('');
     const [isListening, setIsListening] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(false);
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
     const recognitionRef = useRef<any>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -566,7 +566,8 @@ export default function GlobalChat() {
         }
     };
 
-    if (!user) return null;
+    // Don't show chat while auth is loading or if user is not authenticated
+    if (loading || !user) return null;
 
     return (
         <>
