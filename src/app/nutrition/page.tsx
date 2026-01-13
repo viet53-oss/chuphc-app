@@ -1123,9 +1123,9 @@ export default function NutritionPage() {
                                         }}
                                     >
                                         {breakfastMood === m.name ? (
-                                            <CheckCircle2 size={24} color={colors.green} />
+                                            <CheckCircle2 size={30} color={colors.green} />
                                         ) : (
-                                            <Circle size={24} color="#ccc" />
+                                            <Circle size={30} color="#ccc" />
                                         )}
                                         <span style={{
                                             fontSize: fontSize.xs,
@@ -1279,9 +1279,9 @@ export default function NutritionPage() {
                                             opacity: lunchMood === m ? 1 : 0.5
                                         }}
                                     >
-                                        {m === 'Tired' && <Frown size={24} color={colors.secondary} />}
-                                        {m === 'Neutral' && <Meh size={24} color={colors.secondary} />}
-                                        {m === 'Happy' && <Smile size={24} color={colors.secondary} />}
+                                        {m === 'Tired' && <Frown size={30} color={colors.secondary} />}
+                                        {m === 'Neutral' && <Meh size={30} color={colors.secondary} />}
+                                        {m === 'Happy' && <Smile size={30} color={colors.secondary} />}
                                         <span style={{ fontSize: '12pt', marginTop: spacing.xs }}>{m}</span>
                                     </div>
                                 ))}
@@ -1421,9 +1421,9 @@ export default function NutritionPage() {
                                             opacity: dinnerMood === m ? 1 : 0.5
                                         }}
                                     >
-                                        {m === 'Tired' && <Frown size={24} color={colors.secondary} />}
-                                        {m === 'Neutral' && <Meh size={24} color={colors.secondary} />}
-                                        {m === 'Happy' && <Smile size={24} color={colors.secondary} />}
+                                        {m === 'Tired' && <Frown size={30} color={colors.secondary} />}
+                                        {m === 'Neutral' && <Meh size={30} color={colors.secondary} />}
+                                        {m === 'Happy' && <Smile size={30} color={colors.secondary} />}
                                         <span style={{ fontSize: '12pt', marginTop: spacing.xs }}>{m}</span>
                                     </div>
                                 ))}
@@ -1563,9 +1563,9 @@ export default function NutritionPage() {
                                             opacity: snackMood === m ? 1 : 0.5
                                         }}
                                     >
-                                        {m === 'Tired' && <Frown size={24} color={colors.secondary} />}
-                                        {m === 'Neutral' && <Meh size={24} color={colors.secondary} />}
-                                        {m === 'Happy' && <Smile size={24} color={colors.secondary} />}
+                                        {m === 'Tired' && <Frown size={30} color={colors.secondary} />}
+                                        {m === 'Neutral' && <Meh size={30} color={colors.secondary} />}
+                                        {m === 'Happy' && <Smile size={30} color={colors.secondary} />}
                                         <span style={{ fontSize: '12pt', marginTop: spacing.xs }}>{m}</span>
                                     </div>
                                 ))}

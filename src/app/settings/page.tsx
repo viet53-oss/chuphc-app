@@ -96,17 +96,45 @@ export default function SettingsPage() {
     };
 
     const handleDeleteMember = async (id: string) => {
+        setStatusMsg(null);
+
+        // 1. Delete ALL related data first (Cascade manually)
+        const tablesToDelete = [
+            'nutrition_logs', 'activity_logs', 'sleep_logs',
+            'stress_logs', 'social_logs', 'substance_logs',
+            'goals', 'user_settings', 'chat_messages', 'profiles'
+        ];
+
+        for (const table of tablesToDelete) {
+            const { error } = await supabase.from(table).delete().eq('user_id', id); // Most tables use user_id
+            if (error) {
+                // Try 'id' for profiles if user_id fails or isn't the column
+                if (table === 'profiles') await supabase.from(table).delete().eq('id', id);
+                console.log(`Cleanup ${table}:`, error.message);
+            }
+        }
+
+        // 2. Delete from Members Database Table
         const { error } = await supabase.from('members').delete().eq('id', id);
+
+        // 3. Delete from Supabase Authentication (Last step)
+        const { error: authError } = await adminDeleteUser(id);
+
+        if (authError) {
+            console.error('Error deleting auth user:', authError);
+            setStatusMsg({ type: 'error', text: 'Error deleting user authentication: ' + authError });
+        }
+
         if (error) {
             console.error('Error deleting member:', error);
-            // Fallback
+            // Fallback for local state
             const updated = members.filter(m => m.id !== id);
             setMembers(updated);
             localStorage.setItem('chuphc_members_v2', JSON.stringify(updated));
             setStatusMsg({ type: 'error', text: 'Error deleting client from database.' });
         } else {
             setMembers(members.filter(m => m.id !== id));
-            setStatusMsg({ type: 'success', text: 'Client deleted successfully.' });
+            setStatusMsg({ type: 'success', text: 'Client deleted successfully (Auth & DB).' });
         }
         setShowDeleteConfirm(false);
         setMemberToDelete(null);

@@ -237,7 +237,42 @@ export default function GlobalChat() {
     const generateResponseWithData = (query: string, data: any) => {
         const lowerQuery = query.toLowerCase();
 
-        if (lowerQuery.includes('calorie') || lowerQuery.includes('eat') || lowerQuery.includes('meal') || lowerQuery.includes('food') || lowerQuery.includes('banana') || lowerQuery.includes('breakfast') || lowerQuery.includes('lunch') || lowerQuery.includes('dinner') || lowerQuery.includes('snack')) {
+        // Check for specific food item queries first
+        if (data.nutrition?.recentLogs && data.nutrition.recentLogs.length > 0) {
+            // Extract potential food item from query (remove common words)
+            const foodQuery = lowerQuery
+                .replace(/do i like|did i eat|have i eaten|when did i eat|last time i had|i like|i eat/gi, '')
+                .replace(/\?/g, '')
+                .trim();
+
+            // Search for the food item in all meals
+            const mealsWithItem: any[] = [];
+            data.nutrition.recentLogs.forEach((log: any) => {
+                if (log.notes && log.notes.items && log.notes.items.length > 0) {
+                    const matchingItems = log.notes.items.filter((item: string) =>
+                        item.toLowerCase().includes(foodQuery) || foodQuery.includes(item.toLowerCase())
+                    );
+                    if (matchingItems.length > 0) {
+                        mealsWithItem.push({ ...log, matchingItems });
+                    }
+                }
+            });
+
+            // If we found specific food items, return targeted response
+            if (mealsWithItem.length > 0 && foodQuery.length > 2) {
+                const mostRecent = mealsWithItem[0];
+                let response = `Yes! You had ${mostRecent.matchingItems.join(', ')} for ${mostRecent.mealType} at ${mostRecent.time} (${mostRecent.calories} calories).`;
+
+                if (mealsWithItem.length > 1) {
+                    response += `\n\nYou've eaten this ${mealsWithItem.length} time(s) today.`;
+                }
+
+                return response;
+            }
+        }
+
+        // General nutrition queries
+        if (lowerQuery.includes('calorie') || lowerQuery.includes('eat') || lowerQuery.includes('meal') || lowerQuery.includes('food') || lowerQuery.includes('breakfast') || lowerQuery.includes('lunch') || lowerQuery.includes('dinner') || lowerQuery.includes('snack')) {
             if (data.nutrition?.totalCaloriesToday > 0) {
                 let response = `Today you've consumed ${data.nutrition.totalCaloriesToday} calories across ${data.nutrition.mealsLoggedToday} meal(s). `;
 
