@@ -58,24 +58,26 @@ export default function GlobalChat() {
     };
 
     const saveChatMessage = async (role: string, content: string): Promise<boolean> => {
-        if (!user) return false;
+        if (!user) {
+            console.error('[saveChatMessage] No user found');
+            return false;
+        }
 
-        // Use current time, but let the DB confirm insertion
-        const timestamp = new Date().toISOString();
+        console.log(`[saveChatMessage] Saving ${role} message:`, content.substring(0, 50));
 
         const { data, error } = await supabase
             .from('chat_messages')
             .insert([{
                 user_id: user.id,
                 role,
-                content,
-                created_at: timestamp
+                content
+                // Let DB handle created_at with DEFAULT NOW()
             }])
             .select() // Return the inserted row to verify success
             .single();
 
         if (error) {
-            console.error('Failed to save chat message:', error);
+            console.error('[saveChatMessage] Failed to save:', error);
             // Visual feedback for debugging
             setChatMessages(prev => [...prev, {
                 role: 'bot',
@@ -91,6 +93,7 @@ export default function GlobalChat() {
             return false;
         }
 
+        console.log('[saveChatMessage] Successfully saved message with ID:', data.id);
         return true;
     };
 
