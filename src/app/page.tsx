@@ -37,43 +37,46 @@ export default function Dashboard() {
   const [todaySteps, setTodaySteps] = useState(0);
   const [weekSteps, setWeekSteps] = useState(0);
 
-  // Load Activity Data from Local Storage
+  // Load Activity Data from Supabase
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('chu_activity_logs');
-      if (stored) {
-        try {
-          const data = JSON.parse(stored);
-          const today = new Date();
-          const todayStr = today.toISOString().split('T')[0];
+    if (!user) return;
 
-          // Today Stats
-          const todayData = data[todayStr] || { steps: 0, minutes: 0 };
-          setTodaySteps(todayData.steps || 0);
-          setActivityMinutes(todayData.minutes || 0);
+    const fetchActivity = async () => {
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
 
-          // Week Stats (Monday Start)
-          const day = today.getDay();
-          const diff = today.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-          const monday = new Date(today);
-          monday.setDate(diff); // Date of Monday
-          monday.setHours(0, 0, 0, 0);
+      // Calculate start of week (Sunday)
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
 
-          let wSteps = 0;
-          Object.keys(data).forEach(dateStr => {
-            const date = new Date(dateStr);
-            date.setHours(0, 0, 0, 0); // Normalize time
-            if (date >= monday) {
-              wSteps += data[dateStr].steps || 0;
-            }
-          });
-          setWeekSteps(wSteps);
-        } catch (e) {
-          console.error("Failed to parse activity logs", e);
-        }
+      const { data, error } = await supabase
+        .from('daily_activity_summary')
+        .select('date, steps, active_minutes')
+        .eq('user_id', user.id)
+        .gte('date', startOfWeekStr);
+
+      if (data && !error) {
+        let tSteps = 0;
+        let tMinutes = 0;
+        let wSteps = 0;
+
+        data.forEach(log => {
+          wSteps += log.steps || 0;
+          if (log.date === todayStr) {
+            tSteps = log.steps || 0;
+            tMinutes = log.active_minutes || 0;
+          }
+        });
+
+        setTodaySteps(tSteps);
+        setActivityMinutes(tMinutes);
+        setWeekSteps(wSteps);
       }
-    }
-  }, []);
+    };
+
+    fetchActivity();
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;

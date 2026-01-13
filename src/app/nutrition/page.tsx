@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { Apple, Home, Camera, Coffee, Utensils, Cookie, Smile, Frown, Meh, Star, CheckCircle2, Circle, Trash2 } from 'lucide-react';
+import { Apple, Home, Camera, Coffee, Utensils, Cookie, Smile, Frown, Meh, Star, CheckCircle2, Circle, Trash2, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { colors, spacing, fontSize } from '@/lib/design-system';
@@ -146,34 +146,47 @@ export default function NutritionPage() {
     const [breakfastSortMode, setBreakfastSortMode] = useState<'like' | 'abc' | 'calories'>('like');
     const [breakfastItemFrequency, setBreakfastItemFrequency] = useState<Record<string, number>>({});
     const [mealLog, setMealLog] = useState<MealLog[]>([]);
+    const [viewMode, setViewMode] = useState<'today' | 'week' | 'month'>('today');
 
     // Delete Confirmation State
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [mealToDelete, setMealToDelete] = useState<string | null>(null);
+    const [editingMeal, setEditingMeal] = useState<any>(null);
 
-    // Load meal log from Supabase on mount
+
+    // Load meal log & Subscribe to changes
     useEffect(() => {
         if (!user) return;
 
         const loadMeals = async () => {
-            // Fetch recent logs and filter client-side for "Today"
-            // This avoids timezone mismatch issues between device and server query
+            const limit = viewMode === 'today' ? 100 : 1000;
             const { data, error } = await supabase
                 .from('nutrition_logs')
                 .select('*')
                 .eq('user_id', user.id)
                 .order('logged_at', { ascending: false })
-                .limit(100);
+                .limit(limit);
 
             if (data && !error) {
-                // Filter for today in local time
-                const todayStr = new Date().toDateString();
+                // Filter logs based on viewMode
+                const now = new Date();
+                const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-                const todaysLogs = data.filter(log => {
-                    return new Date(log.logged_at).toDateString() === todayStr;
-                });
+                let filteredLogs = data;
 
-                const meals = todaysLogs.map(log => {
+                if (viewMode === 'today') {
+                    filteredLogs = data.filter(log => new Date(log.logged_at) >= startOfDay);
+                } else if (viewMode === 'week') {
+                    const startOfWeek = new Date(now);
+                    startOfWeek.setDate(now.getDate() - 7);
+                    filteredLogs = data.filter(log => new Date(log.logged_at) >= startOfWeek);
+                } else if (viewMode === 'month') {
+                    const startOfMonth = new Date(now);
+                    startOfMonth.setDate(now.getDate() - 30);
+                    filteredLogs = data.filter(log => new Date(log.logged_at) >= startOfMonth);
+                }
+
+                const meals = filteredLogs.map(log => {
                     const loggedTime = new Date(log.logged_at);
                     const notes = log.notes ? JSON.parse(log.notes) : {};
 
@@ -211,21 +224,23 @@ export default function NutritionPage() {
                 },
                 (payload) => {
                     console.log('Realtime change detected:', payload);
-                    loadMeals(); // Reload logs when any change happens
+                    loadMeals();
                 }
             )
             .subscribe();
 
         // Load breakfast frequency from localStorage
-        const savedFrequency = localStorage.getItem('breakfast_frequency');
-        if (savedFrequency) {
-            setBreakfastItemFrequency(JSON.parse(savedFrequency));
+        if (typeof window !== 'undefined') {
+            const savedFrequency = localStorage.getItem('breakfast_frequency');
+            if (savedFrequency) {
+                setBreakfastItemFrequency(JSON.parse(savedFrequency));
+            }
         }
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user]);
+    }, [user, viewMode]);
 
     // Log Meal Form States
     const [mealType, setMealType] = useState('Lunch');
@@ -280,48 +295,63 @@ export default function NutritionPage() {
         const calories = calculateBreakfastCalories();
         const now = new Date();
 
-        // Save to Supabase
-        const { error } = await supabase
-            .from('nutrition_logs')
-            .insert([{
-                user_id: user.id,
-                meal_type: 'Breakfast',
-                calories: calories,
-                food_name: selectedBreakfastItems.join(', '),
-                notes: JSON.stringify({
+        if (editingMeal) {
+            // Update existing meal
+            const { error } = await supabase
+                .from('nutrition_logs')
+                .update({
+                    meal_type: 'Breakfast',
+                    calories: calories,
+                    food_name: selectedBreakfastItems.join(', '),
+                    notes: JSON.stringify({ items: selectedBreakfastItems, mood: breakfastMood })
+                })
+                .eq('id', editingMeal.id);
+
+            if (!error) {
+                setMealLog(prev => prev.map(m => m.id === editingMeal.id ? { ...m, items: selectedBreakfastItems, mood: breakfastMood, calories } : m));
+                setDailyCalories(prev => prev - editingMeal.calories + calories);
+            }
+        } else {
+            // Insert new meal
+            const { error } = await supabase
+                .from('nutrition_logs')
+                .insert([{
+                    user_id: user.id,
+                    meal_type: 'Breakfast',
+                    calories: calories,
+                    food_name: selectedBreakfastItems.join(', '),
+                    notes: JSON.stringify({ items: selectedBreakfastItems, mood: breakfastMood }),
+                    logged_at: now.toISOString()
+                }]);
+
+            if (!error) {
+                const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                setMealLog(prev => [{
+                    id: 'temp-' + Date.now(),
+                    time: timeString,
+                    type: 'Breakfast',
                     items: selectedBreakfastItems,
-                    mood: breakfastMood
-                }),
-                logged_at: now.toISOString()
-            }]);
+                    mood: breakfastMood,
+                    calories: calories
+                }, ...prev]);
 
-        if (!error) {
-            // Update local state
-            const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            setMealLog(prev => [{
-                id: 'temp-' + Date.now(), // Temporary ID until reload
-                time: timeString,
-                type: 'Breakfast',
-                items: selectedBreakfastItems,
-                mood: breakfastMood,
-                calories: calories
-            }, ...prev]);
+                setDailyCalories(prev => prev + calories);
+                setMealsLogged(prev => prev + 1);
 
-            setDailyCalories(prev => prev + calories);
-            setMealsLogged(prev => prev + 1);
-
-            // Update frequency tracking
-            const updatedFrequency = { ...breakfastItemFrequency };
-            selectedBreakfastItems.forEach(itemName => {
-                updatedFrequency[itemName] = (updatedFrequency[itemName] || 0) + 1;
-            });
-            setBreakfastItemFrequency(updatedFrequency);
-            localStorage.setItem('breakfast_frequency', JSON.stringify(updatedFrequency));
+                // Update frequency only on new adds
+                const updatedFrequency = { ...breakfastItemFrequency };
+                selectedBreakfastItems.forEach(itemName => {
+                    updatedFrequency[itemName] = (updatedFrequency[itemName] || 0) + 1;
+                });
+                setBreakfastItemFrequency(updatedFrequency);
+                localStorage.setItem('breakfast_frequency', JSON.stringify(updatedFrequency));
+            }
         }
 
         setShowBreakfastPopup(false);
         setSelectedBreakfastItems([]);
         setBreakfastMood('');
+        setEditingMeal(null);
     };
 
     // Lunch handlers
@@ -344,38 +374,53 @@ export default function NutritionPage() {
         const calories = calculateLunchCalories();
         const now = new Date();
 
-        const { error } = await supabase
-            .from('nutrition_logs')
-            .insert([{
-                user_id: user.id,
-                meal_type: 'Lunch',
-                calories: calories,
-                food_name: selectedLunchItems.join(', '),
-                notes: JSON.stringify({
+        if (editingMeal) {
+            const { error } = await supabase
+                .from('nutrition_logs')
+                .update({
+                    meal_type: 'Lunch',
+                    calories: calories,
+                    food_name: selectedLunchItems.join(', '),
+                    notes: JSON.stringify({ items: selectedLunchItems, mood: lunchMood })
+                })
+                .eq('id', editingMeal.id);
+
+            if (!error) {
+                setMealLog(prev => prev.map(m => m.id === editingMeal.id ? { ...m, items: selectedLunchItems, mood: lunchMood, calories } : m));
+                setDailyCalories(prev => prev - editingMeal.calories + calories);
+            }
+        } else {
+            const { error } = await supabase
+                .from('nutrition_logs')
+                .insert([{
+                    user_id: user.id,
+                    meal_type: 'Lunch',
+                    calories: calories,
+                    food_name: selectedLunchItems.join(', '),
+                    notes: JSON.stringify({ items: selectedLunchItems, mood: lunchMood }),
+                    logged_at: now.toISOString()
+                }]);
+
+            if (!error) {
+                const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                setMealLog(prev => [{
+                    id: 'temp-' + Date.now(),
+                    time: timeString,
+                    type: 'Lunch',
                     items: selectedLunchItems,
-                    mood: lunchMood
-                }),
-                logged_at: now.toISOString()
-            }]);
+                    mood: lunchMood,
+                    calories: calories
+                }, ...prev]);
 
-        if (!error) {
-            const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            setMealLog(prev => [{
-                id: 'temp-' + Date.now(),
-                time: timeString,
-                type: 'Lunch',
-                items: selectedLunchItems,
-                mood: lunchMood,
-                calories: calories
-            }, ...prev]);
-
-            setDailyCalories(prev => prev + calories);
-            setMealsLogged(prev => prev + 1);
+                setDailyCalories(prev => prev + calories);
+                setMealsLogged(prev => prev + 1);
+            }
         }
 
         setShowLunchPopup(false);
         setSelectedLunchItems([]);
         setLunchMood('');
+        setEditingMeal(null);
     };
 
     // Dinner handlers
@@ -398,38 +443,53 @@ export default function NutritionPage() {
         const calories = calculateDinnerCalories();
         const now = new Date();
 
-        const { error } = await supabase
-            .from('nutrition_logs')
-            .insert([{
-                user_id: user.id,
-                meal_type: 'Dinner',
-                calories: calories,
-                food_name: selectedDinnerItems.join(', '),
-                notes: JSON.stringify({
+        if (editingMeal) {
+            const { error } = await supabase
+                .from('nutrition_logs')
+                .update({
+                    meal_type: 'Dinner',
+                    calories: calories,
+                    food_name: selectedDinnerItems.join(', '),
+                    notes: JSON.stringify({ items: selectedDinnerItems, mood: dinnerMood })
+                })
+                .eq('id', editingMeal.id);
+
+            if (!error) {
+                setMealLog(prev => prev.map(m => m.id === editingMeal.id ? { ...m, items: selectedDinnerItems, mood: dinnerMood, calories } : m));
+                setDailyCalories(prev => prev - editingMeal.calories + calories);
+            }
+        } else {
+            const { error } = await supabase
+                .from('nutrition_logs')
+                .insert([{
+                    user_id: user.id,
+                    meal_type: 'Dinner',
+                    calories: calories,
+                    food_name: selectedDinnerItems.join(', '),
+                    notes: JSON.stringify({ items: selectedDinnerItems, mood: dinnerMood }),
+                    logged_at: now.toISOString()
+                }]);
+
+            if (!error) {
+                const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                setMealLog(prev => [{
+                    id: 'temp-' + Date.now(),
+                    time: timeString,
+                    type: 'Dinner',
                     items: selectedDinnerItems,
-                    mood: dinnerMood
-                }),
-                logged_at: now.toISOString()
-            }]);
+                    mood: dinnerMood,
+                    calories: calories
+                }, ...prev]);
 
-        if (!error) {
-            const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            setMealLog(prev => [{
-                id: 'temp-' + Date.now(),
-                time: timeString,
-                type: 'Dinner',
-                items: selectedDinnerItems,
-                mood: dinnerMood,
-                calories: calories
-            }, ...prev]);
-
-            setDailyCalories(prev => prev + calories);
-            setMealsLogged(prev => prev + 1);
+                setDailyCalories(prev => prev + calories);
+                setMealsLogged(prev => prev + 1);
+            }
         }
 
         setShowDinnerPopup(false);
         setSelectedDinnerItems([]);
         setDinnerMood('');
+        setEditingMeal(null);
     };
 
     // Snack handlers
@@ -452,38 +512,53 @@ export default function NutritionPage() {
         const calories = calculateSnackCalories();
         const now = new Date();
 
-        const { error } = await supabase
-            .from('nutrition_logs')
-            .insert([{
-                user_id: user.id,
-                meal_type: 'Snack',
-                calories: calories,
-                food_name: selectedSnackItems.join(', '),
-                notes: JSON.stringify({
+        if (editingMeal) {
+            const { error } = await supabase
+                .from('nutrition_logs')
+                .update({
+                    meal_type: 'Snack',
+                    calories: calories,
+                    food_name: selectedSnackItems.join(', '),
+                    notes: JSON.stringify({ items: selectedSnackItems, mood: snackMood })
+                })
+                .eq('id', editingMeal.id);
+
+            if (!error) {
+                setMealLog(prev => prev.map(m => m.id === editingMeal.id ? { ...m, items: selectedSnackItems, mood: snackMood, calories } : m));
+                setDailyCalories(prev => prev - editingMeal.calories + calories);
+            }
+        } else {
+            const { error } = await supabase
+                .from('nutrition_logs')
+                .insert([{
+                    user_id: user.id,
+                    meal_type: 'Snack',
+                    calories: calories,
+                    food_name: selectedSnackItems.join(', '),
+                    notes: JSON.stringify({ items: selectedSnackItems, mood: snackMood }),
+                    logged_at: now.toISOString()
+                }]);
+
+            if (!error) {
+                const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                setMealLog(prev => [{
+                    id: 'temp-' + Date.now(),
+                    time: timeString,
+                    type: 'Snack',
                     items: selectedSnackItems,
-                    mood: snackMood
-                }),
-                logged_at: now.toISOString()
-            }]);
+                    mood: snackMood,
+                    calories: calories
+                }, ...prev]);
 
-        if (!error) {
-            const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            setMealLog(prev => [{
-                id: 'temp-' + Date.now(),
-                time: timeString,
-                type: 'Snack',
-                items: selectedSnackItems,
-                mood: snackMood,
-                calories: calories
-            }, ...prev]);
-
-            setDailyCalories(prev => prev + calories);
-            setMealsLogged(prev => prev + 1);
+                setDailyCalories(prev => prev + calories);
+                setMealsLogged(prev => prev + 1);
+            }
         }
 
         setShowSnackPopup(false);
         setSelectedSnackItems([]);
         setSnackMood('');
+        setEditingMeal(null);
     };
 
     const unselectedFoods = FOOD_ITEMS.filter(f => !selectedFoods.includes(f));
@@ -521,6 +596,27 @@ export default function NutritionPage() {
         setMealToDelete(null);
     };
 
+    const handleEditClick = (meal: any) => {
+        setEditingMeal(meal);
+        if (meal.type === 'Breakfast') {
+            setSelectedBreakfastItems(meal.items || []);
+            setBreakfastMood(meal.mood || '');
+            setShowBreakfastPopup(true);
+        } else if (meal.type === 'Lunch') {
+            setSelectedLunchItems(meal.items || []);
+            setLunchMood(meal.mood || '');
+            setShowLunchPopup(true);
+        } else if (meal.type === 'Dinner') {
+            setSelectedDinnerItems(meal.items || []);
+            setDinnerMood(meal.mood || '');
+            setShowDinnerPopup(true);
+        } else if (meal.type === 'Snack') {
+            setSelectedSnackItems(meal.items || []);
+            setSnackMood(meal.mood || '');
+            setShowSnackPopup(true);
+        }
+    };
+
     const handleAddMeal = () => {
         setMealsLogged(prev => prev + 1);
         setShowLogMealPopup(false);
@@ -546,7 +642,29 @@ export default function NutritionPage() {
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <h2 style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0 }}>Today's Summary</h2>
+                            <h2 style={{ fontSize: '16pt', fontWeight: 'bold', margin: 0 }}>
+                                {viewMode === 'today' ? "Today's Summary" : viewMode === 'week' ? "Week Summary" : "Month Summary"}
+                            </h2>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                {['Today', 'Week', 'Month'].map((mode) => (
+                                    <button
+                                        key={mode}
+                                        onClick={() => setViewMode(mode.toLowerCase() as any)}
+                                        style={{
+                                            padding: '4px 12px',
+                                            borderRadius: '16px',
+                                            border: 'none',
+                                            backgroundColor: viewMode === mode.toLowerCase() ? colors.black : '#e5e7eb',
+                                            color: viewMode === mode.toLowerCase() ? 'white' : 'black',
+                                            fontSize: '10pt',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {mode}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                         <Link href="/" style={{ textDecoration: 'none' }}>
                             <button style={{
@@ -590,6 +708,9 @@ export default function NutritionPage() {
                 </section>
 
                 {/* Meals */}
+
+
+                {/* Meals Buttons */}
                 <section style={{
                     border: '2px solid black',
                     borderRadius: '12px',
@@ -608,16 +729,29 @@ export default function NutritionPage() {
                                 backgroundColor: '#f97316',
                                 color: colors.white,
                                 border: 'none',
-                                borderRadius: '9999px',
+                                borderRadius: '24px',
                                 fontSize: '18pt',
                                 fontWeight: '700',
                                 cursor: 'pointer',
                                 display: 'flex',
+                                flexDirection: 'column',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                lineHeight: '1.2',
+                                width: '100%'
                             }}
                         >
-                            Breakfast
+                            <span>Breakfast</span>
+                            {viewMode !== 'today' ? (
+                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '12pt', fontWeight: '500', padding: '0 10px', marginTop: '4px' }}>
+                                    <span>{mealLog.filter(m => m.type === 'Breakfast').length} meals</span>
+                                    <span>{mealLog.filter(m => m.type === 'Breakfast').reduce((sum, m) => sum + (m.calories || 0), 0)} cal</span>
+                                </div>
+                            ) : (
+                                <span style={{ fontSize: '12pt', fontWeight: '500' }}>
+                                    {mealLog.filter(m => m.type === 'Breakfast').reduce((sum, m) => sum + (m.calories || 0), 0)} cal
+                                </span>
+                            )}
                         </button>
                         <button
                             onClick={() => {
@@ -628,16 +762,29 @@ export default function NutritionPage() {
                                 backgroundColor: '#22c55e',
                                 color: colors.white,
                                 border: 'none',
-                                borderRadius: '9999px',
+                                borderRadius: '24px',
                                 fontSize: '18pt',
                                 fontWeight: '700',
                                 cursor: 'pointer',
                                 display: 'flex',
+                                flexDirection: 'column',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                lineHeight: '1.2',
+                                width: '100%'
                             }}
                         >
-                            Lunch
+                            <span>Lunch</span>
+                            {viewMode !== 'today' ? (
+                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '12pt', fontWeight: '500', padding: '0 10px', marginTop: '4px' }}>
+                                    <span>{mealLog.filter(m => m.type === 'Lunch').length} meals</span>
+                                    <span>{mealLog.filter(m => m.type === 'Lunch').reduce((sum, m) => sum + (m.calories || 0), 0)} cal</span>
+                                </div>
+                            ) : (
+                                <span style={{ fontSize: '12pt', fontWeight: '500' }}>
+                                    {mealLog.filter(m => m.type === 'Lunch').reduce((sum, m) => sum + (m.calories || 0), 0)} cal
+                                </span>
+                            )}
                         </button>
                         <button
                             onClick={() => {
@@ -648,16 +795,29 @@ export default function NutritionPage() {
                                 backgroundColor: '#3b82f6',
                                 color: colors.white,
                                 border: 'none',
-                                borderRadius: '9999px',
+                                borderRadius: '24px',
                                 fontSize: '18pt',
                                 fontWeight: '700',
                                 cursor: 'pointer',
                                 display: 'flex',
+                                flexDirection: 'column',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                lineHeight: '1.2',
+                                width: '100%'
                             }}
                         >
-                            Dinner
+                            <span>Dinner</span>
+                            {viewMode !== 'today' ? (
+                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '12pt', fontWeight: '500', padding: '0 10px', marginTop: '4px' }}>
+                                    <span>{mealLog.filter(m => m.type === 'Dinner').length} meals</span>
+                                    <span>{mealLog.filter(m => m.type === 'Dinner').reduce((sum, m) => sum + (m.calories || 0), 0)} cal</span>
+                                </div>
+                            ) : (
+                                <span style={{ fontSize: '12pt', fontWeight: '500' }}>
+                                    {mealLog.filter(m => m.type === 'Dinner').reduce((sum, m) => sum + (m.calories || 0), 0)} cal
+                                </span>
+                            )}
                         </button>
                         <button
                             onClick={() => {
@@ -668,19 +828,33 @@ export default function NutritionPage() {
                                 backgroundColor: '#a855f7',
                                 color: colors.white,
                                 border: 'none',
-                                borderRadius: '9999px',
+                                borderRadius: '24px',
                                 fontSize: '18pt',
                                 fontWeight: '700',
                                 cursor: 'pointer',
                                 display: 'flex',
+                                flexDirection: 'column',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                lineHeight: '1.2',
+                                width: '100%'
                             }}
                         >
-                            Snack
+                            <span>Snack</span>
+                            {viewMode !== 'today' ? (
+                                <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: '12pt', fontWeight: '500', padding: '0 10px', marginTop: '4px' }}>
+                                    <span>{mealLog.filter(m => m.type === 'Snack').length} meals</span>
+                                    <span>{mealLog.filter(m => m.type === 'Snack').reduce((sum, m) => sum + (m.calories || 0), 0)} cal</span>
+                                </div>
+                            ) : (
+                                <span style={{ fontSize: '12pt', fontWeight: '500' }}>
+                                    {mealLog.filter(m => m.type === 'Snack').reduce((sum, m) => sum + (m.calories || 0), 0)} cal
+                                </span>
+                            )}
                         </button>
                     </div>
                 </section>
+
 
                 {/* Meals Log */}
                 <section style={{
@@ -690,11 +864,41 @@ export default function NutritionPage() {
                     padding: '2px',
                     margin: '2px'
                 }}>
-                    <h2 style={{ fontSize: '16pt', fontWeight: 'bold', marginBottom: '2px' }}>Meals Log</h2>
+                    <h2 style={{ fontSize: '16pt', fontWeight: 'bold', marginBottom: '2px' }}>
+                        {viewMode === 'today' ? "Meals Log" : viewMode === 'week' ? "Week Log" : "Month Log"}
+                    </h2>
+
+                    {/* Period Summary */}
+
                     {mealLog.length === 0 ? (
                         <p style={{ fontSize: '14pt', color: colors.gray, textAlign: 'center', padding: '2px' }}>
-                            No meals logged yet today
+                            No meals logged yet {viewMode === 'today' ? 'today' : 'in this period'}
                         </p>
+                    ) : viewMode !== 'today' ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {['Breakfast', 'Lunch', 'Dinner', 'Snack'].map(type => {
+                                const mealsOfType = mealLog.filter(m => m.type === type);
+                                const count = mealsOfType.length;
+                                const totalCals = mealsOfType.reduce((sum, m) => sum + (m.calories || 0), 0);
+                                const allItems = mealsOfType.flatMap(m => m.items);
+                                const uniqueItems = Array.from(new Set(allItems)).sort();
+                                const foodList = uniqueItems.length > 0 ? uniqueItems.join(', ') : 'No foods logged';
+                                const typeColors: Record<string, string> = { Breakfast: '#f97316', Lunch: '#22c55e', Dinner: '#3b82f6', Snack: '#a855f7' };
+                                const color = typeColors[type];
+
+                                return (
+                                    <div key={type} style={{ padding: spacing.md, backgroundColor: colors.primaryTint, borderRadius: '8px', border: '2px solid black', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '14pt', fontWeight: 'bold', color }}>{type}: <span style={{ color: 'black' }}>{count} meals</span></span>
+                                            <span style={{ fontSize: '12pt', fontWeight: 'bold' }}>{totalCals} cal</span>
+                                        </div>
+                                        <div style={{ fontSize: '12pt', color: colors.secondary }}>
+                                            {foodList}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                             {mealLog.map((meal, index) => (
@@ -706,46 +910,91 @@ export default function NutritionPage() {
                                         borderRadius: '8px',
                                         border: '2px solid black',
                                         display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
+                                        alignItems: 'center',
+                                        gap: '12px'
                                     }}
                                 >
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs }}>
+                                    {/* Mood Icon (Left, Large) */}
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                        {(() => {
+                                            const typeColors: Record<string, string> = {
+                                                Breakfast: '#f97316',
+                                                Lunch: '#22c55e',
+                                                Dinner: '#3b82f6',
+                                                Snack: '#a855f7'
+                                            };
+                                            const iconColor = typeColors[meal.type] || colors.secondary;
+
+                                            if (!meal.mood) return <div style={{ width: 40, height: 40 }} />; // Spacer if no mood
+
+                                            return (
+                                                <>
+                                                    {meal.mood === 'Happy' && <Smile size={40} color={iconColor} />}
+                                                    {meal.mood === 'Neutral' && <Meh size={40} color={iconColor} />}
+                                                    {meal.mood === 'Tired' && <Frown size={40} color={iconColor} />}
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                        {/* Row 1: Type, Time, Calories */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                            <span style={{
+                                                fontSize: '16pt',
+                                                fontWeight: 'bold',
+                                                color: (() => {
+                                                    const typeColors: Record<string, string> = {
+                                                        Breakfast: '#f97316',
+                                                        Lunch: '#22c55e',
+                                                        Dinner: '#3b82f6',
+                                                        Snack: '#a855f7'
+                                                    };
+                                                    return typeColors[meal.type] || colors.secondary;
+                                                })()
+                                            }}>
+                                                {meal.type}
+                                            </span>
                                             <span style={{ fontSize: '14pt', fontWeight: 'bold', color: colors.secondary }}>
                                                 {meal.time}
                                             </span>
-                                            <span style={{ fontSize: '14pt', fontWeight: 'bold' }}>
-                                                {meal.type === 'Breakfast' ? 'BK' : meal.type}
-                                            </span>
-                                            {meal.mood && (
-                                                <span style={{ display: 'flex', alignItems: 'center', marginLeft: '4px' }}>
-                                                    {meal.mood === 'Happy' && <Smile size={20} color={colors.green} />}
-                                                    {meal.mood === 'Neutral' && <Meh size={20} color={colors.orange} />}
-                                                    {meal.mood === 'Tired' && <Frown size={20} color={colors.red} />}
-                                                </span>
-                                            )}
-                                            <span style={{ fontSize: '16pt', fontWeight: 'bold', color: colors.secondary, marginLeft: 'auto' }}>
-                                                {meal.calories} cal
-                                            </span>
-                                            {isAdmin && (
+                                            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <button
-                                                    onClick={() => handleDeleteClick(meal.id)}
+                                                    onClick={() => handleEditClick(meal)}
                                                     style={{
                                                         background: 'none',
                                                         border: 'none',
                                                         cursor: 'pointer',
-                                                        marginLeft: '8px',
                                                         padding: '4px',
-                                                        color: colors.red
+                                                        color: colors.secondary
                                                     }}
-                                                    title="Delete Log (Admin Only)"
+                                                    title="Edit Log"
                                                 >
-                                                    <Trash2 size={20} />
+                                                    <Pencil size={20} />
                                                 </button>
-                                            )}
+                                                <span style={{ fontSize: '16pt', fontWeight: 'bold', color: colors.secondary }}>
+                                                    {meal.calories} cal
+                                                </span>
+                                                {isAdmin && (
+                                                    <button
+                                                        onClick={() => handleDeleteClick(meal.id)}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            padding: '4px',
+                                                            color: colors.red
+                                                        }}
+                                                        title="Delete Log (Admin Only)"
+                                                    >
+                                                        <Trash2 size={20} />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div style={{ fontSize: '14pt', color: colors.gray, marginTop: spacing.xs }}>
+
+                                        {/* Row 2: Items */}
+                                        <div style={{ fontSize: '14pt', color: colors.gray }}>
                                             {meal.items.length > 0 ? meal.items.join(', ') : 'No items logged'}
                                         </div>
                                     </div>
@@ -1335,6 +1584,7 @@ export default function NutritionPage() {
                                         setShowBreakfastPopup(false);
                                         setSelectedBreakfastItems([]);
                                         setBreakfastMood('');
+                                        setEditingMeal(null);
                                     }}
                                     style={{
                                         flex: 1,
@@ -1477,6 +1727,7 @@ export default function NutritionPage() {
                                         setShowLunchPopup(false);
                                         setSelectedLunchItems([]);
                                         setLunchMood('');
+                                        setEditingMeal(null);
                                     }}
                                     style={{
                                         flex: 1,
@@ -1619,6 +1870,7 @@ export default function NutritionPage() {
                                         setShowDinnerPopup(false);
                                         setSelectedDinnerItems([]);
                                         setDinnerMood('');
+                                        setEditingMeal(null);
                                     }}
                                     style={{
                                         flex: 1,
@@ -1761,6 +2013,7 @@ export default function NutritionPage() {
                                         setShowSnackPopup(false);
                                         setSelectedSnackItems([]);
                                         setSnackMood('');
+                                        setEditingMeal(null);
                                     }}
                                     style={{
                                         flex: 1,
@@ -1781,6 +2034,6 @@ export default function NutritionPage() {
                     </div>
                 )}
             </div>
-        </ProtectedRoute>
+        </ProtectedRoute >
     );
 }
