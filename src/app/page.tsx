@@ -13,7 +13,7 @@ import {
   Users,
   ShieldAlert,
   Settings,
-
+  LogOut,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -30,7 +30,7 @@ const PILLARS = [
 ];
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [dailyCalories, setDailyCalories] = useState<number>(0);
   const [weeklyCalories, setWeeklyCalories] = useState<number>(0);
   const [activityMinutes, setActivityMinutes] = useState(0);
@@ -236,6 +236,30 @@ export default function Dashboard() {
             ))}
           </div>
         </section>
+
+        {/* LOGOUT BUTTON */}
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '32px 0 16px' }}>
+          <button
+            onClick={signOut}
+            style={{
+              padding: '12px 32px',
+              backgroundColor: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '9999px',
+              fontSize: '14pt',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            }}
+          >
+            <LogOut size={20} />
+            Logout
+          </button>
+        </div>
 
       </div >
     </ProtectedRoute >

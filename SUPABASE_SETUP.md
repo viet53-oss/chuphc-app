@@ -30,7 +30,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 1. Go to your Supabase Dashboard
 2. Click on **SQL Editor** in the left sidebar
 3. Click **New Query**
-4. Open the file `supabase/schema.sql` in this project
+4. Open the file `supabase/schema_final.sql` in this project (This contains the COMPLETE schema)
 5. Copy the entire contents
 6. Paste into the Supabase SQL Editor
 7. Click **Run** (or press Ctrl/Cmd + Enter)
@@ -195,3 +195,29 @@ subscription.unsubscribe();
 - [Supabase JS Client](https://supabase.com/docs/reference/javascript/introduction)
 - [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security)
 - [Realtime](https://supabase.com/docs/guides/realtime)
+
+## 6. Create Members Table (Required for Client Management)
+
+Run this SQL in your Supabase SQL Editor to create the `members` table:
+
+```sql
+create table if not exists members (
+  id uuid primary key default gen_random_uuid(), -- can link to auth.users.id if desired, or keep separate
+  created_at timestamptz default now(),
+  email text unique not null,
+  first_name text,
+  last_name text,
+  address text,
+  city text,
+  state text,
+  zip text,
+  phone text
+  -- auth_id uuid references auth.users(id) -- Optional linking
+);
+
+-- Enable RLS (Security)
+alter table members enable row level security;
+
+-- Allow all access for now (or configure restrictive policies)
+create policy "Enable all access for users" on members for all using (true) with check (true);
+```

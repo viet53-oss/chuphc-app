@@ -37,7 +37,7 @@ export default function Navbar({ customTitle }: { customTitle?: string }) {
     };
 
     const submitAdminPassword = () => {
-        if (adminPassword === 'Ujs') {
+        if (adminPassword === '123') {
             setIsAdmin(true);
             setShowAdminPopup(false);
             setAdminPassword('');
