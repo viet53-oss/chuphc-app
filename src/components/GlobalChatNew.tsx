@@ -114,17 +114,21 @@ export default function GlobalChat() {
         console.log('[handleLocalQuery] Query:', query);
         console.log('[handleLocalQuery] Client data:', {
             hasNutrition: !!clientData?.nutrition,
-            nutritionCount: clientData?.nutrition?.length || 0,
-            hasExercise: !!clientData?.exercise,
-            exerciseCount: clientData?.exercise?.length || 0
+            nutritionCount: clientData?.nutrition?.allLogs?.length || 0,
+            hasExercise: !!clientData?.activity,
+            exerciseCount: clientData?.activity?.length || 0
         });
+
+        // Get nutrition logs (use allLogs from the nested structure)
+        const nutritionLogs = clientData?.nutrition?.allLogs || [];
+        const activityLogs = clientData?.activity || [];
 
         // Questions like "did I have banana today?"
         const foodMatch = lowerQuery.match(/(?:have|eat|ate)\s+(\w+)/);
         if (foodMatch) {
             const foodItem = foodMatch[1];
-            if (clientData?.nutrition && clientData.nutrition.length > 0) {
-                const found = clientData.nutrition.some((item: any) =>
+            if (nutritionLogs.length > 0) {
+                const found = nutritionLogs.some((item: any) =>
                     item.meal_name?.toLowerCase().includes(foodItem)
                 );
                 return found
@@ -137,8 +141,8 @@ export default function GlobalChat() {
 
         // Questions like "what did I eat today?"
         if (lowerQuery.includes('what did i eat') || lowerQuery.includes('what have i eaten')) {
-            if (clientData?.nutrition && clientData.nutrition.length > 0) {
-                const foods = clientData.nutrition.map((item: any) => item.meal_name).filter(Boolean);
+            if (nutritionLogs.length > 0) {
+                const foods = nutritionLogs.map((item: any) => item.meal_name).filter(Boolean);
                 return foods.length > 0
                     ? `Today you ate: ${foods.join(', ')}.`
                     : "You haven't logged any food today.";
@@ -149,8 +153,8 @@ export default function GlobalChat() {
 
         // Exercise questions
         if (lowerQuery.includes('did i exercise') || lowerQuery.includes('did i work out')) {
-            if (clientData?.exercise && clientData.exercise.length > 0) {
-                const exercises = clientData.exercise.map((item: any) => item.exercise_name).filter(Boolean);
+            if (activityLogs.length > 0) {
+                const exercises = activityLogs.map((item: any) => item.activity_type).filter(Boolean);
                 return exercises.length > 0
                     ? `Yes, you did: ${exercises.join(', ')}.`
                     : "You haven't logged any exercise today.";
@@ -161,8 +165,8 @@ export default function GlobalChat() {
 
         // Today's calories
         if (lowerQuery.includes('calorie') || lowerQuery.includes('today\'s calorie')) {
-            if (clientData?.nutrition && clientData.nutrition.length > 0) {
-                const totalCalories = clientData.nutrition.reduce((sum: number, item: any) => sum + (item.calories || 0), 0);
+            const totalCalories = clientData?.nutrition?.totalCaloriesToday || 0;
+            if (totalCalories > 0) {
                 return `Today you've consumed ${totalCalories} calories.`;
             } else {
                 return "You haven't logged any food today, so I can't calculate your calories.";
@@ -171,8 +175,8 @@ export default function GlobalChat() {
 
         // Last meal
         if (lowerQuery.includes('last meal') || lowerQuery.includes('latest meal')) {
-            if (clientData?.nutrition && clientData.nutrition.length > 0) {
-                const lastMeal = clientData.nutrition[clientData.nutrition.length - 1];
+            if (nutritionLogs.length > 0) {
+                const lastMeal = nutritionLogs[0]; // Already sorted by logged_at descending
                 return `Your last meal was ${lastMeal.meal_name || 'unknown'} (${lastMeal.calories || 0} calories).`;
             } else {
                 return "You haven't logged any meals today.";
@@ -183,17 +187,19 @@ export default function GlobalChat() {
         if (lowerQuery.includes('health summary') || lowerQuery.includes('summary')) {
             const parts = [];
 
-            if (clientData?.nutrition && clientData.nutrition.length > 0) {
-                const totalCalories = clientData.nutrition.reduce((sum: number, item: any) => sum + (item.calories || 0), 0);
-                parts.push(`Nutrition: ${clientData.nutrition.length} meals, ${totalCalories} calories`);
+            const totalCalories = clientData?.nutrition?.totalCaloriesToday || 0;
+            const mealsCount = clientData?.nutrition?.mealsLoggedToday || 0;
+            if (mealsCount > 0) {
+                parts.push(`Nutrition: ${mealsCount} meals, ${totalCalories} calories`);
             }
 
-            if (clientData?.exercise && clientData.exercise.length > 0) {
-                parts.push(`Exercise: ${clientData.exercise.length} activities`);
+            if (activityLogs.length > 0) {
+                parts.push(`Exercise: ${activityLogs.length} activities`);
             }
 
-            if (clientData?.sleep && clientData.sleep.length > 0) {
-                parts.push(`Sleep: ${clientData.sleep.length} logs`);
+            const sleepLogs = clientData?.sleep || [];
+            if (sleepLogs.length > 0) {
+                parts.push(`Sleep: ${sleepLogs.length} logs`);
             }
 
             return parts.length > 0
