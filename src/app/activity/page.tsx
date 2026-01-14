@@ -30,7 +30,7 @@ export default function ActivityPage() {
             const { data, error } = await supabase
                 .from('daily_activity_summary')
                 .select('steps, active_minutes')
-                .eq('user_id', user.id)
+                // .eq('user_id', user.id) // Removed for testing
                 .eq('date', today)
                 .single();
 

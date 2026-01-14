@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { colors, spacing, fontSize } from '@/lib/design-system';
 import { Dna, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
+    const { loginTestUser } = useAuth();
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -37,16 +39,9 @@ export default function LoginPage() {
                 setMessage({ type: 'success', text: 'Sign up successful! Please check your email to confirm your account.' });
             }
         } else {
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-
-            if (error) {
-                setMessage({ type: 'error', text: error.message });
-            } else {
-                router.push('/');
-            }
+            // For testing: Bypass authentication
+            loginTestUser();
+            return;
         }
         setLoading(false);
     };
@@ -127,6 +122,11 @@ export default function LoginPage() {
                             <span style={{ fontSize: fontSize.lg, fontWeight: 'bold', color: colors.black }}>
                                 {isSignUp ? 'Sign Up' : 'Sign In'}
                             </span>
+                            {!isSignUp && (
+                                <p style={{ color: '#d32f2f', fontSize: '20pt', margin: '8px 0', textAlign: 'center', fontWeight: 'bold', lineHeight: '1.2' }}>
+                                    For testing just select:<br />Sign in
+                                </p>
+                            )}
                         </div>
 
                         {/* Logo */}
@@ -178,7 +178,7 @@ export default function LoginPage() {
                         )}
 
                         {/* Form */}
-                        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+                        <form onSubmit={handleAuth} noValidate style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
 
                             {/* Input Group */}
                             <div style={{
@@ -307,6 +307,6 @@ export default function LoginPage() {
                     to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
-        </div>
+        </div >
     );
 }

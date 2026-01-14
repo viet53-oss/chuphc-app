@@ -155,6 +155,7 @@ export default function NutritionPage() {
 
 
     // Load meal log & Subscribe to changes
+    // Load meal log & Subscribe to changes
     useEffect(() => {
         if (!user) return;
 
@@ -163,7 +164,7 @@ export default function NutritionPage() {
             const { data, error } = await supabase
                 .from('nutrition_logs')
                 .select('*')
-                .eq('user_id', user.id)
+                // .eq('user_id', user.id) // REMOVED FOR TESTING
                 .order('logged_at', { ascending: false })
                 .limit(limit);
 
@@ -219,8 +220,8 @@ export default function NutritionPage() {
                 {
                     event: '*',
                     schema: 'public',
-                    table: 'nutrition_logs',
-                    filter: `user_id=eq.${user.id}`
+                    table: 'nutrition_logs'
+                    // filter: `user_id=eq.${user.id}` // REMOVED FOR TESTING
                 },
                 (payload) => {
                     console.log('Realtime change detected:', payload);

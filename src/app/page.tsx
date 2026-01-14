@@ -93,7 +93,7 @@ export default function Dashboard() {
       const { data: logs, error } = await supabase
         .from('nutrition_logs')
         .select('calories, logged_at')
-        .eq('user_id', user.id)
+        // .eq('user_id', user.id) // Removed for testing
         .gte('logged_at', startOfWeek.toISOString());
 
       if (logs && !error) {
@@ -145,6 +145,11 @@ export default function Dashboard() {
           }}>
             Chu Precision Health Center
           </h1>
+          {user?.user_metadata?.full_name && (
+            <h2 style={{ fontSize: '16pt', color: '#1F363D', margin: '4px 0' }}>
+              Welcome, {user.user_metadata.full_name}
+            </h2>
+          )}
           <div style={{
             backgroundColor: 'white',
             borderRadius: '12px',

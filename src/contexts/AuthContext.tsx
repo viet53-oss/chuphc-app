@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { auth } from '@/lib/auth';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
@@ -11,6 +12,7 @@ interface AuthContextType {
     signOut: () => Promise<void>;
     isAdmin: boolean;
     setIsAdmin: (value: boolean) => void;
+    loginTestUser: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -19,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
     signOut: async () => { },
     isAdmin: false,
     setIsAdmin: () => { },
+    loginTestUser: () => { },
 });
 
 export const useAuth = () => {
@@ -92,8 +95,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const loginTestUser = async () => {
+        try {
+            setLoading(true);
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: 'uyen_chu@hotmail.com',
+                password: '123456'
+            });
+
+            if (error) {
+                console.error('Login failed:', error);
+                alert('Login failed: ' + error.message);
+
+                // If login fails (e.g. user not found), we could try to sign up or just fall back to fake? 
+                // For now, let's stick to real auth as requested.
+                // If user doesn't exist, we might need to create them.
+                if (error.message.includes('Invalid login credentials')) {
+                    // Optionally try to sign up if we think they might not exist, 
+                    // but "uyen's password" implies they exist.
+                }
+            } else {
+                console.log('Logged in as:', data.user);
+                // The onAuthStateChange listener in useEffect should handle setting the user state
+                router.push('/');
+            }
+        } catch (e: any) {
+            console.error('Login error:', e);
+            alert('An unexpected error occurred: ' + e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, signOut: handleSignOut, isAdmin, setIsAdmin }}>
+        <AuthContext.Provider value={{ user, loading, signOut: handleSignOut, isAdmin, setIsAdmin, loginTestUser }}>
             {children}
         </AuthContext.Provider>
     );

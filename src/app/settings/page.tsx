@@ -23,7 +23,7 @@ interface Member {
 }
 
 export default function SettingsPage() {
-    const { isAdmin, signOut } = useAuth();
+    const { user, isAdmin, signOut } = useAuth();
     const [members, setMembers] = useState<Member[]>([]);
     const [newMemberEmail, setNewMemberEmail] = useState('');
     const [newMemberPassword, setNewMemberPassword] = useState('');
@@ -210,7 +210,9 @@ export default function SettingsPage() {
                         <User size={24} color={colors.secondary} />
                         <div style={{ flex: 1 }}>
                             <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', margin: 0 }}>My Profile</h3>
-                            <p style={{ fontSize: fontSize.sm, color: colors.gray, margin: 0 }}>Manage your personal information</p>
+                            <p style={{ fontSize: fontSize.sm, color: colors.gray, margin: 0 }}>
+                                {user?.user_metadata?.full_name ? `${user.user_metadata.full_name} (${user.email})` : 'Manage your personal information'}
+                            </p>
                         </div>
                     </div>
 
